@@ -99,6 +99,10 @@ export default function App() {
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={({ route }) => ({
+          tabBarStyle: {
+          backgroundColor: '#f16513ff', 
+          borderTopColor: 'transparent', // removes line
+          },
           tabBarIcon: ({ color, size }) => {
             let iconName;
 
