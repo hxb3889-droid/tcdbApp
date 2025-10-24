@@ -103,6 +103,8 @@ export default function App() {
           backgroundColor: '#f16513ff', 
           borderTopColor: 'transparent', // removes line
           },
+          tabBarActiveTintColor: '#ffffff',
+          tabBarInactiveTintColor: 'rgba(255,255,255,0.7)',
           tabBarIcon: ({ color, size }) => {
             let iconName;
 
