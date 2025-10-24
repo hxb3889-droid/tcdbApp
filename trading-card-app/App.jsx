@@ -14,7 +14,7 @@ const TopBar = ({ onProfilePress, onNotificationsPress }) => (
     </TouchableOpacity>
     <TouchableOpacity onPress={onProfilePress}>
       <Image
-        source={{ uri: "https://via.placeholder.com/40" }}
+        source={{ uri: "https://asset-cdn.schoology.com/system/files/imagecache/profile_reg/pictures/picture-e8a0249654e68b957372daadeb86f8f6_67868fa2a16c2.jpg?1736871842" }}
         style={styles.profilePic}
       />
     </TouchableOpacity>
@@ -44,13 +44,18 @@ const HomeScreen = () => {
       />
 
       {/* Card of the Day */}
+      <Text style={styles.title}>Card of the Day</Text>
       <View style={styles.cardContainer}>
-        <Text style={styles.title}>Card of the Day</Text>
-        <Image
-          source={{ uri: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjnaTnV0jPoGTYJZuVQgPN3D1lySK8LQBEqWSxgssxo4I77RGQmnZKXkFzx3PyHJgjmiXcL7kJHVcgensYsDkNzGaThQ6P1WEuEWjCsmdTWDGXBV3oHMfVI344k6E_zirHOv1-J2DPtPbM/s400/banana+fish.jpg" }}
-          style={styles.cardImage}
-        />
-        <Text style={styles.cardText}>Trala lero banini</Text>
+        <View style={styles.cardInfoContainer}>
+          
+          <Image
+            source={{ uri: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjnaTnV0jPoGTYJZuVQgPN3D1lySK8LQBEqWSxgssxo4I77RGQmnZKXkFzx3PyHJgjmiXcL7kJHVcgensYsDkNzGaThQ6P1WEuEWjCsmdTWDGXBV3oHMfVI344k6E_zirHOv1-J2DPtPbM/s400/banana+fish.jpg" }}
+            style={styles.cardImage}
+          />
+          <Text style={styles.cardText}>Trala lero banini</Text>
+        </View>
+        <View style={styles.verticalLine} />
+        
       </View>
 
       {/* Poll of the Day */}
@@ -132,7 +137,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#FAFAFA",
   },
   center: {
     flex: 1,
@@ -151,22 +156,42 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   cardContainer: {
-    alignItems: "center",
+    flexDirection: 'row', 
+    alignItems: "left",
+    marginBottom: 20,
+    backgroundColor: "#ffffffff",
+    borderRadius: 10,
+  },
+  cardInfoContainer: {
+    
+    flexDirection: 'column', 
+    alignItems: "left",
+    marginLeft: 10,
+    marginTop: 20,
     marginBottom: 20,
   },
   title: {
-    fontSize: 20,
+    fontFamily: "AdventPro-Medium",
+    fontSize: 13,
     fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 10,
   },
   cardImage: {
-    width: 200,
-    height: 300,
-    borderRadius: 10,
+    width: 141,
+    height: 200,
   },
   cardText: {
     marginTop: 10,
     fontSize: 16,
+  },
+   verticalLine: {
+    display: 'inline-block',
+    width: 1.5, // Thickness of the line
+    height: '95%', // Makes the line span the full height of its parent
+    backgroundColor: 'black', // Color of the line
+    marginTop: "2.5%",
+    marginLeft: 15,
   },
   pollContainer: {
     marginTop: 10,
@@ -177,7 +202,7 @@ const styles = StyleSheet.create({
   },
   pollOption: {
     padding: 10,
-    backgroundColor: "#ddd",
+    backgroundColor: "#ffffffff",
     borderRadius: 8,
     marginVertical: 5,
   },
