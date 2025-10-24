@@ -47,10 +47,10 @@ const HomeScreen = () => {
       <View style={styles.cardContainer}>
         <Text style={styles.title}>Card of the Day</Text>
         <Image
-          source={{ uri: "https://asset-cdn.schoology.com/system/files/imagecache/profile_reg/pictures/picture-e8a0249654e68b957372daadeb86f8f6_67868fa2a16c2.jpg?1736871842" }}
+          source={{ uri: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjnaTnV0jPoGTYJZuVQgPN3D1lySK8LQBEqWSxgssxo4I77RGQmnZKXkFzx3PyHJgjmiXcL7kJHVcgensYsDkNzGaThQ6P1WEuEWjCsmdTWDGXBV3oHMfVI344k6E_zirHOv1-J2DPtPbM/s400/banana+fish.jpg" }}
           style={styles.cardImage}
         />
-        <Text style={styles.cardText}>Ball buster</Text>
+        <Text style={styles.cardText}>Trala lero banini</Text>
       </View>
 
       {/* Poll of the Day */}
@@ -111,7 +111,7 @@ export default function App() {
             else if (route.name === "Collection") iconName = "albums-outline";
             else if (route.name === "Settings") iconName = "settings-outline";
 
-            return <Ionicons name={iconName} size={size} color={color} />;
+            return <Ionicons name={iconName} size={size} color="white" />;
           },
           headerShown: false,
         })}
