@@ -1,28 +1,83 @@
-import React, { useState } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, TextInput, Switch, Alert, ScrollView, ImageBackground } from "react-native";
+import React, { useState, useContext, createContext } from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, TextInput, Switch, Alert, ScrollView, ImageBackground, Modal } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 
 const Tab = createBottomTabNavigator();
 
+// Simple auth context for demo login/logout
+const AuthContext = createContext({ user: null, setUser: () => {}, openLogin: () => {}, closeLogin: () => {} });
+
+// Login modal (temporary credentials: id=testuser password=password123)
+const LoginModal = ({ visible, onClose }) => {
+  const { setUser } = useContext(AuthContext);
+  const [id, setId] = useState("");
+  const [password, setPassword] = useState("");
+  const tempId = "Garner@gmail.com";
+  const tempPassword = "bob";
+
+  const handleLogin = () => {
+    if (id === tempId && password === tempPassword) {
+      // set a simple user object
+      setUser({ id: tempId, name: "Mr. Garner", email: tempId, avatar: "https://via.placeholder.com/80" });
+      onClose();
+      Alert.alert("Logged in", "Welcome, Mr. Garner");
+    } else {
+      Alert.alert("Login failed", `Invalid id or password. Try id: ${tempId} / password: ${tempPassword}`);
+    }
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' }}>
+        <View style={{ width: 320, backgroundColor: '#fff', borderRadius: 8, padding: 16 }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 8 }}>Sign in</Text>
+          <TextInput placeholder="id" value={id} onChangeText={setId} style={{ borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 6, padding: 8, marginBottom: 8 }} />
+          <TextInput placeholder="password" value={password} secureTextEntry onChangeText={setPassword} style={{ borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 6, padding: 8, marginBottom: 12 }} />
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+            <TouchableOpacity onPress={onClose} style={{ marginRight: 12 }}>
+              <Text style={{ color: '#666' }}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogin} style={{ backgroundColor: '#f16513ff', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 }}>
+              <Text style={{ color: '#fff', fontWeight: '700' }}>Sign in</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 // ---------- Top Bar ----------
-const TopBar = ({ onProfilePress, onNotificationsPress }) => (
-  <View style={styles.topBar}>
-    <TouchableOpacity onPress={onNotificationsPress}>
-      <Ionicons name="notifications-outline" size={28} color="black" />
-    </TouchableOpacity>
-    <TouchableOpacity onPress={onProfilePress}>
-      <Image
-        source={{ uri: "https://asset-cdn.schoology.com/system/files/imagecache/profile_reg/pictures/picture-e8a0249654e68b957372daadeb86f8f6_67868fa2a16c2.jpg?1736871842" }}
-        style={styles.profilePic}
-      />
-    </TouchableOpacity>
-  </View>
-);
+const TopBar = ({ onProfilePress, onNotificationsPress }) => {
+  const { user, openLogin } = useContext(AuthContext);
+
+  const handleProfilePress = () => {
+    if (user) {
+      onProfilePress && onProfilePress();
+    } else {
+      openLogin && openLogin();
+    }
+  };
+
+  return (
+    <View style={styles.topBar}>
+      <TouchableOpacity onPress={onNotificationsPress}>
+        <Ionicons name="notifications-outline" size={28} color="black" />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={handleProfilePress}>
+        <Image
+          source={{ uri: user?.avatar || "https://asset-cdn.schoology.com/system/files/imagecache/profile_reg/pictures/picture-0df87436fe3b2eeed3a7f9c463821113_67867e4992ad5.jpg?1736867401" }}
+          style={styles.profilePic}
+        />
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 // ---------- Home Screen ----------
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
   const [pollOptions, setPollOptions] = useState([
     { id: "1", text: "Yes", votes: 0 },
     { id: "2", text: "No", votes: 0 },
@@ -52,7 +107,7 @@ const HomeScreen = () => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <TopBar onProfilePress={() => alert("Profile pressed")} onNotificationsPress={() => alert("Notifications pressed")} />
+      <TopBar onProfilePress={() => navigation.navigate('Settings')} onNotificationsPress={() => alert("Notifications pressed")} />
 
       {/* Hero / Card of the Day */}
       <View style={{ paddingHorizontal: 6 }}>
@@ -241,30 +296,36 @@ const CollectionScreen = () => {
 };
 
 const SettingsScreen = () => {
+  const { user, setUser } = useContext(AuthContext);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const [username, setUsername] = useState("User Name");
-  const [email, setEmail] = useState("user@example.com");
+  const [username, setUsername] = useState(user?.name || "User Name");
+  const [email, setEmail] = useState(user?.email || "user@example.com");
 
   const handleSave = () => {
-    Alert.alert("Saved", "Your settings have been saved.");
+    if (user) {
+      setUser({ ...user, name: username, email });
+      Alert.alert("Saved", "Your settings have been saved.");
+    } else {
+      Alert.alert("Not signed in", "Please sign in to save account settings.");
+    }
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      "Log out",
-      "Are you sure you want to log out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Log out", style: "destructive", onPress: () => Alert.alert("Logged out") },
-      ]
-    );
+    if (!user) {
+      Alert.alert("Not signed in", "You're not signed in.");
+      return;
+    }
+    Alert.alert("Log out", "Are you sure you want to log out?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Log out", style: "destructive", onPress: () => { setUser(null); Alert.alert("Logged out"); } },
+    ]);
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={styles.profileSection}>
-        <Image source={{ uri: "https://via.placeholder.com/80" }} style={styles.profilePicLarge} />
+        <Image source={{ uri: user?.avatar || "https://via.placeholder.com/80" }} style={styles.profilePicLarge} />
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={styles.cardTitle}>{username}</Text>
           <Text style={{ color: "#666", marginTop: 4 }}>{email}</Text>
@@ -306,35 +367,46 @@ const SettingsScreen = () => {
 
 // ---------- App Navigation ----------
 export default function App() {
+  const [user, setUser] = useState(null);
+  const [loginVisible, setLoginVisible] = useState(false);
+
+  const openLogin = () => setLoginVisible(true);
+  const closeLogin = () => setLoginVisible(false);
+
   return (
-    <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarStyle: {
-          backgroundColor: '#f16513ff', 
-          borderTopColor: 'transparent', // removes line
-          },
-          tabBarActiveTintColor: '#ffffff',
-          tabBarInactiveTintColor: 'rgba(255,255,255,0.7)',
-          tabBarIcon: ({ color, size }) => {
-            let iconName;
+    <AuthContext.Provider value={{ user, setUser, openLogin, closeLogin }}>
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            tabBarStyle: {
+              backgroundColor: '#f16513ff',
+              borderTopColor: 'transparent', // removes line
+            },
+            tabBarActiveTintColor: '#ffffff',
+            tabBarInactiveTintColor: 'rgba(255,255,255,0.7)',
+            tabBarIcon: ({ color, size }) => {
+              let iconName;
 
-            if (route.name === "Home") iconName = "home-outline";
-            else if (route.name === "Search") iconName = "search-outline";
-            else if (route.name === "Collection") iconName = "albums-outline";
-            else if (route.name === "Settings") iconName = "settings-outline";
+              if (route.name === "Home") iconName = "home-outline";
+              else if (route.name === "Search") iconName = "search-outline";
+              else if (route.name === "Collection") iconName = "albums-outline";
+              else if (route.name === "Settings") iconName = "settings-outline";
 
-            return <Ionicons name={iconName} size={size} color="white" />;
-          },
-          headerShown: false,
-        })}
-      >
-        <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Search" component={SearchScreen} />
-        <Tab.Screen name="Collection" component={CollectionScreen} />
-        <Tab.Screen name="Settings" component={SettingsScreen} />
-      </Tab.Navigator>
-    </NavigationContainer>
+              return <Ionicons name={iconName} size={size} color="white" />;
+            },
+            headerShown: false,
+          })}
+        >
+          <Tab.Screen name="Home" component={HomeScreen} />
+          <Tab.Screen name="Search" component={SearchScreen} />
+          <Tab.Screen name="Collection" component={CollectionScreen} />
+          <Tab.Screen name="Settings" component={SettingsScreen} />
+        </Tab.Navigator>
+      </NavigationContainer>
+
+      {/* Login modal rendered at root so it overlays the app */}
+      <LoginModal visible={loginVisible} onClose={closeLogin} />
+    </AuthContext.Provider>
   );
 }
 
