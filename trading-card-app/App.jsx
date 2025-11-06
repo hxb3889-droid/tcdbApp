@@ -20,7 +20,7 @@ const LoginModal = ({ visible, onClose }) => {
   const handleLogin = () => {
     if (id === tempId && password === tempPassword) {
       // set a simple user object
-      setUser({ id: tempId, name: "Mr. Garner", email: tempId, avatar: "https://via.placeholder.com/80" });
+      setUser({ id: tempId, name: "Mr. Garner", email: tempId, avatar: "https://asset-cdn.schoology.com/system/files/imagecache/profile_reg/pictures/picture-0df87436fe3b2eeed3a7f9c463821113_67867e4992ad5.jpg?1736867401" });
       onClose();
       Alert.alert("Logged in", "Welcome, Mr. Garner");
     } else {
@@ -68,7 +68,7 @@ const TopBar = ({ onProfilePress, onNotificationsPress }) => {
       </TouchableOpacity>
       <TouchableOpacity onPress={handleProfilePress}>
         <Image
-          source={{ uri: user?.avatar || "https://asset-cdn.schoology.com/system/files/imagecache/profile_reg/pictures/picture-0df87436fe3b2eeed3a7f9c463821113_67867e4992ad5.jpg?1736867401" }}
+          source={{ uri: user?.avatar || "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png" }}
           style={styles.profilePic}
         />
       </TouchableOpacity>
@@ -325,7 +325,7 @@ const SettingsScreen = () => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={styles.profileSection}>
-        <Image source={{ uri: user?.avatar || "https://via.placeholder.com/80" }} style={styles.profilePicLarge} />
+        <Image source={{ uri: user?.avatar || "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png" }} style={styles.profilePicLarge} />
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={styles.cardTitle}>{username}</Text>
           <Text style={{ color: "#666", marginTop: 4 }}>{email}</Text>
