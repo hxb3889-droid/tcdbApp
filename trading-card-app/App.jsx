@@ -14,11 +14,11 @@ const LoginModal = ({ visible, onClose }) => {
   const { setUser } = useContext(AuthContext);
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
-  const tempId = "Garner@gmail.com";
+  const tempId = "garner@gmail.com";
   const tempPassword = "bob";
 
   const handleLogin = () => {
-    if (id === tempId && password === tempPassword) {
+    if (id.toLowerCase() === tempId && password === tempPassword) {
       // set a simple user object
       setUser({ id: tempId, name: "Mr. Garner", email: tempId, avatar: "https://asset-cdn.schoology.com/system/files/imagecache/profile_reg/pictures/picture-0df87436fe3b2eeed3a7f9c463821113_67867e4992ad5.jpg?1736867401" });
       onClose();
@@ -88,9 +88,9 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const featured = [
-    { id: "f1", title: "Ball buster", subtitle: "Rare", image: "https://via.placeholder.com/220x320?text=Ball" },
-    { id: "f2", title: "Field General", subtitle: "Epic", image: "https://via.placeholder.com/220x320?text=Field" },
-    { id: "f3", title: "Clutch Shooter", subtitle: "Legend", image: "https://via.placeholder.com/220x320?text=Clutch" },
+    { id: "f1", title: "Bob addis", subtitle: "Rare", image: "https://www.tcdb.com/Images/Cards/Baseball/9092/9092-157Fr.jpg" },
+    { id: "f2", title: "Ted Williams", subtitle: "Epic", image: "https://via.placeholder.com/220x320?text=Field" },
+    { id: "f3", title: "Ronaldo", subtitle: "Legend", image: "https://via.placeholder.com/220x320?text=Clutch" },
   ];
 
   const renderFeatured = ({ item }) => (
@@ -119,7 +119,7 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.heroOverlay} />
           <View style={styles.heroContent}>
             <Text style={styles.heroTitle}>Card of the Day</Text>
-            <Text style={styles.heroSubtitle}>Ball buster • Rare</Text>
+            <Text style={styles.heroSubtitle}>banana fishy • Rare</Text>
             <TouchableOpacity style={styles.ctaButton} onPress={() => alert('Added to collection')}>
               <Text style={styles.ctaText}>Add to collection</Text>
             </TouchableOpacity>
@@ -159,16 +159,16 @@ const SearchScreen = () => {
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("All");
 
-  const tabs = ["All", "Players", "Teams"];
+  const tabs = ["All", "Baseball", "Soccer"];
 
   // Sample card data — replace with API data when available
   const cards = [
-    { id: "1", title: "Ball buster", type: "Players", image: "https://via.placeholder.com/120x180?text=Ball" },
-    { id: "2", title: "Field General", type: "Players", image: "https://via.placeholder.com/120x180?text=Field" },
-    { id: "3", title: "Red Raptors", type: "Teams", image: "https://via.placeholder.com/120x180?text=Raptors" },
-    { id: "4", title: "Blue Bombers", type: "Teams", image: "https://via.placeholder.com/120x180?text=Bombers" },
-    { id: "5", title: "Clutch Shooter", type: "Players", image: "https://via.placeholder.com/120x180?text=Clutch" },
-    { id: "6", title: "Golden Eagles", type: "Teams", image: "https://via.placeholder.com/120x180?text=Eagles" },
+    { id: "1", title: "Bob Addis", type: "Baseball", image: "https://www.tcdb.com/Images/Cards/Baseball/9092/9092-157Fr.jpg" },
+    { id: "2", title: "Ted Williams", type: "Baseball", image: "https://via.placeholder.com/120x180?text=Field" },
+    { id: "3", title: "Ronaldo", type: "Soccer", image: "https://via.placeholder.com/120x180?text=Raptors" },
+    { id: "4", title: "Messi", type: "Soccer", image: "https://via.placeholder.com/120x180?text=Bombers" },
+    { id: "5", title: "Babe ruth", type: "Baseball", image: "https://via.placeholder.com/120x180?text=Clutch" },
+    { id: "6", title: "Neymar", type: "Soccer", image: "https://via.placeholder.com/120x180?text=Eagles" },
   ];
 
   const filtered = cards.filter((c) => {
@@ -194,7 +194,7 @@ const SearchScreen = () => {
     <View style={styles.container}>
       <View style={styles.searchBar}>
         <TextInput
-          placeholder="Search cards, players, teams..."
+          placeholder="Search cards, Baseball, Soccer..."
           value={query}
           onChangeText={setQuery}
           style={styles.searchInput}
@@ -230,12 +230,12 @@ const CollectionScreen = () => {
   const filters = ["All", "Owned", "Wishlist"];
 
   const cards = [
-    { id: "c1", title: "Ball buster", type: "Player", rarity: "Rare", image: "https://via.placeholder.com/240x320?text=Ball" },
-    { id: "c2", title: "Field General", type: "Player", rarity: "Epic", image: "https://via.placeholder.com/240x320?text=Field" },
-    { id: "c3", title: "Red Raptors", type: "Team", rarity: "Common", image: "https://via.placeholder.com/240x320?text=Raptors" },
-    { id: "c4", title: "Blue Bombers", type: "Team", rarity: "Uncommon", image: "https://via.placeholder.com/240x320?text=Bombers" },
-    { id: "c5", title: "Clutch Shooter", type: "Player", rarity: "Legend", image: "https://via.placeholder.com/240x320?text=Clutch" },
-    { id: "c6", title: "Golden Eagles", type: "Team", rarity: "Rare", image: "https://via.placeholder.com/240x320?text=Eagles" },
+    { id: "c1", title: "Bob Addis", type: "Baseball", rarity: "Rare", image: "https://www.tcdb.com/Images/Cards/Baseball/9092/9092-157Fr.jpg" },
+    { id: "c2", title: "Ted Williams", type: "Baseball", rarity: "Epic", image: "https://via.placeholder.com/240x320?text=Field" },
+    { id: "c3", title: "Ronaldo", type: "Soccer", rarity: "Common", image: "https://via.placeholder.com/240x320?text=Raptors" },
+    { id: "c4", title: "Messi", type: "Soccer", rarity: "Uncommon", image: "https://via.placeholder.com/240x320?text=Bombers" },
+    { id: "c5", title: "Babe Ruth", type: "Baseball", rarity: "Legend", image: "https://via.placeholder.com/240x320?text=Clutch" },
+    { id: "c6", title: "Neymar", type: "Soccer", rarity: "Rare", image: "https://via.placeholder.com/240x320?text=Eagles" },
   ];
 
   const filtered = cards.filter((c) => {
