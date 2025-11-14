@@ -78,6 +78,7 @@ const TopBar = ({ onProfilePress, onNotificationsPress }) => {
 
 // ---------- Home Screen ----------
 const HomeScreen = ({ navigation }) => {
+  const { openLogin } = useContext(AuthContext);
   const [pollOptions, setPollOptions] = useState([
     { id: "1", text: "Yes", votes: 0 },
     { id: "2", text: "No", votes: 0 },
@@ -106,8 +107,13 @@ const HomeScreen = ({ navigation }) => {
   );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <TopBar onProfilePress={() => navigation.navigate('Settings')} onNotificationsPress={() => alert("Notifications pressed")} />
+    <TouchableOpacity 
+      activeOpacity={1}
+      onPress={openLogin}
+      style={{ flex: 1 }}
+    >
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+        <TopBar onProfilePress={() => navigation.navigate('Settings')} onNotificationsPress={() => alert("Notifications pressed")} />
 
       {/* Hero / Card of the Day */}
       <View style={{ paddingHorizontal: 6 }}>
@@ -150,7 +156,8 @@ const HomeScreen = ({ navigation }) => {
           />
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </TouchableOpacity>
   );
 };
 
