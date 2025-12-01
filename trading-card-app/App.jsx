@@ -17,7 +17,7 @@ const LoginModal = ({ visible, onClose }) => {
   const tempId = "garner@gmail.com";
   const tempPassword = "bob";
 
-  const handleLogin = () => {
+  const handleLogin = () => { 
     if (id.toLowerCase() === tempId && password === tempPassword) {
       // set a simple user object
       setUser({ id: tempId, name: "Mr. Garner", email: tempId, avatar: "https://asset-cdn.schoology.com/system/files/imagecache/profile_reg/pictures/picture-0df87436fe3b2eeed3a7f9c463821113_67867e4992ad5.jpg?1736867401" });
@@ -83,9 +83,11 @@ const HomeScreen = ({ navigation }) => {
     { id: "1", text: "Yes", votes: 0 },
     { id: "2", text: "No", votes: 0 },
   ]);
+  const [pollAnswered, setPollAnswered] = useState(false);
 
   const vote = (id) => {
     setPollOptions((prev) => prev.map((opt) => (opt.id === id ? { ...opt, votes: opt.votes + 1 } : opt)));
+    setPollAnswered(true);
   };
 
   const featured = [
@@ -107,13 +109,8 @@ const HomeScreen = ({ navigation }) => {
   );
 
   return (
-    <TouchableOpacity 
-      activeOpacity={1}
-      onPress={openLogin}
-      style={{ flex: 1 }}
-    >
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-        <TopBar onProfilePress={() => navigation.navigate('Settings')} onNotificationsPress={() => alert("Notifications pressed")} />
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+      <TopBar onProfilePress={() => navigation.navigate('Settings')} onNotificationsPress={() => alert("Notifications pressed")} />
 
       {/* Hero / Card of the Day */}
       <View style={{ paddingHorizontal: 6 }}>
@@ -140,24 +137,25 @@ const HomeScreen = ({ navigation }) => {
       </View>
 
       {/* Poll of the Day */}
-      <View style={{ marginTop: 12, paddingHorizontal: 6 }}>
-        <View style={styles.section}>
-          <Text style={styles.title}>Poll of the Day</Text>
-          <Text style={styles.pollQuestion}>Do you like today's card?</Text>
-          <FlatList
-            data={pollOptions}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity style={styles.pollOption} onPress={() => vote(item.id)}>
-                <Text style={{ fontWeight: '600' }}>{item.text}</Text>
-                <Text style={{ color: '#888' }}>{item.votes} votes</Text>
-              </TouchableOpacity>
-            )}
-          />
+      {!pollAnswered && (
+        <View style={{ marginTop: 12, paddingHorizontal: 6 }}>
+          <View style={styles.section}>
+            <Text style={styles.title}>Poll of the Day</Text>
+            <Text style={styles.pollQuestion}>Do you like today's card?</Text>
+            <FlatList
+              data={pollOptions}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={styles.pollOption} onPress={() => vote(item.id)}>
+                  <Text style={{ fontWeight: '600' }}>{item.text}</Text>
+                  <Text style={{ color: '#888' }}>{item.votes} votes</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
         </View>
-      </View>
-      </ScrollView>
-    </TouchableOpacity>
+      )}
+    </ScrollView>
   );
 };
 
@@ -234,23 +232,94 @@ const SearchScreen = () => {
 
 const CollectionScreen = () => {
   const [activeFilter, setActiveFilter] = useState("All");
+  const [expandedCategories, setExpandedCategories] = useState({});
+  const [expandedTypes, setExpandedTypes] = useState({});
+  const [expandedSets, setExpandedSets] = useState({});
+  const [subsetSelection, setSubsetSelection] = useState({});
+
   const filters = ["All", "Owned", "Wishlist"];
 
   const cards = [
-    { id: "c1", title: "Bob Addis", type: "Baseball", rarity: "Rare", image: "https://www.tcdb.com/Images/Cards/Baseball/9092/9092-157Fr.jpg" },
-    { id: "c2", title: "Ted Williams", type: "Baseball", rarity: "Epic", image: "https://via.placeholder.com/240x320?text=Field" },
-    { id: "c3", title: "Ronaldo", type: "Soccer", rarity: "Common", image: "https://via.placeholder.com/240x320?text=Raptors" },
-    { id: "c4", title: "Messi", type: "Soccer", rarity: "Uncommon", image: "https://via.placeholder.com/240x320?text=Bombers" },
-    { id: "c5", title: "Babe Ruth", type: "Baseball", rarity: "Legend", image: "https://via.placeholder.com/240x320?text=Clutch" },
-    { id: "c6", title: "Neymar", type: "Soccer", rarity: "Rare", image: "https://via.placeholder.com/240x320?text=Eagles" },
+    // ===== SPORT CARDS =====
+    // Baseball
+    { id: "c1", title: "Bob Addis", type: "Baseball", category: "Sport", rarity: "Rare", image: "https://www.tcdb.com/Images/Cards/Baseball/9092/9092-157Fr.jpg", owned: true, set: "1954 Topps", subset: "Base" },
+    { id: "c2", title: "Ted Williams", type: "Baseball", category: "Sport", rarity: "Epic", image: "https://via.placeholder.com/240x320?text=Field", owned: true, set: "1954 Topps", subset: "Base" },
+    { id: "c7", title: "Willie Mays", type: "Baseball", category: "Sport", rarity: "Rare", image: "https://via.placeholder.com/240x320?text=Mays", owned: false, set: "1954 Topps", subset: "Variation A" },
+    { id: "c5", title: "Babe Ruth", type: "Baseball", category: "Sport", rarity: "Legend", image: "https://via.placeholder.com/240x320?text=Clutch", owned: true, set: "1954 Topps", subset: "Variation A" },
+    { id: "c21", title: "Jackie Robinson", type: "Baseball", category: "Sport", rarity: "Epic", image: "https://via.placeholder.com/240x320?text=Robinson", owned: false, set: "1954 Topps", subset: "Base" },
+    { id: "c22", title: "Stan The Man Musial", type: "Baseball", category: "Sport", rarity: "Rare", image: "https://via.placeholder.com/240x320?text=Musial", owned: true, set: "1970 Topps", subset: "Base" },
+
+    // Soccer
+    { id: "c3", title: "Ronaldo", type: "Soccer", category: "Sport", rarity: "Common", image: "https://via.placeholder.com/240x320?text=Raptors", owned: false, set: "2022 Panini Adrenalyn", subset: "Base" },
+    { id: "c4", title: "Messi", type: "Soccer", category: "Sport", rarity: "Uncommon", image: "https://via.placeholder.com/240x320?text=Bombers", owned: true, set: "2022 Panini Adrenalyn", subset: "Base" },
+    { id: "c6", title: "Neymar", type: "Soccer", category: "Sport", rarity: "Rare", image: "https://via.placeholder.com/240x320?text=Eagles", owned: false, set: "2022 Panini Adrenalyn", subset: "Shiny" },
+    { id: "c23", title: "Mbappé", type: "Soccer", category: "Sport", rarity: "Epic", image: "https://via.placeholder.com/240x320?text=Mbappe", owned: true, set: "2023 Panini Prizm", subset: "Base" },
+    { id: "c24", title: "Haaland", type: "Soccer", category: "Sport", rarity: "Rare", image: "https://via.placeholder.com/240x320?text=Haaland", owned: true, set: "2023 Panini Prizm", subset: "Shiny" },
+    { id: "c25", title: "Vinicius Jr", type: "Soccer", category: "Sport", rarity: "Uncommon", image: "https://via.placeholder.com/240x320?text=ViniJr", owned: false, set: "2023 Panini Prizm", subset: "Base" },
+
+    // Basketball
+    { id: "c26", title: "Michael Jordan", type: "Basketball", category: "Sport", rarity: "Legend", image: "https://via.placeholder.com/240x320?text=Jordan", owned: true, set: "1986 Fleer", subset: "Base" },
+    { id: "c27", title: "LeBron James", type: "Basketball", category: "Sport", rarity: "Epic", image: "https://via.placeholder.com/240x320?text=LeBron", owned: true, set: "2021 Panini Mosaic", subset: "Base" },
+    { id: "c28", title: "Luka Doncic", type: "Basketball", category: "Sport", rarity: "Rare", image: "https://via.placeholder.com/240x320?text=Luka", owned: false, set: "2021 Panini Mosaic", subset: "Gold" },
+
+    // ===== COLLECTIBLES CARD GAMES =====
+    // Pokémon
+    { id: "p1", title: "Pikachu", type: "Pokémon", category: "CCG", rarity: "Common", image: "https://via.placeholder.com/240x320?text=Pikachu", owned: true, set: "Base Set", subset: "Holo" },
+    { id: "p2", title: "Charizard", type: "Pokémon", category: "CCG", rarity: "Legend", image: "https://via.placeholder.com/240x320?text=Charizard", owned: false, set: "Base Set", subset: "Holo" },
+    { id: "p3", title: "Blastoise", type: "Pokémon", category: "CCG", rarity: "Epic", image: "https://via.placeholder.com/240x320?text=Blastoise", owned: true, set: "Base Set", subset: "Non-Holo" },
+    { id: "p4", title: "Venusaur", type: "Pokémon", category: "CCG", rarity: "Epic", image: "https://via.placeholder.com/240x320?text=Venusaur", owned: true, set: "Jungle", subset: "Holo" },
+    { id: "p5", title: "Mewtwo", type: "Pokémon", category: "CCG", rarity: "Legend", image: "https://via.placeholder.com/240x320?text=Mewtwo", owned: false, set: "Base Set", subset: "Holo" },
+    { id: "p6", title: "Dragonite", type: "Pokémon", category: "CCG", rarity: "Rare", image: "https://via.placeholder.com/240x320?text=Dragonite", owned: true, set: "Fossil", subset: "Holo" },
+
+    // Magic: The Gathering
+    { id: "m1", title: "Black Lotus", type: "MTG", category: "CCG", rarity: "Legend", image: "https://via.placeholder.com/240x320?text=BlackLotus", owned: false, set: "Limited Edition Alpha", subset: "Base" },
+    { id: "m2", title: "Lightning Bolt", type: "MTG", category: "CCG", rarity: "Rare", image: "https://via.placeholder.com/240x320?text=LightningBolt", owned: true, set: "Limited Edition Beta", subset: "Base" },
+    { id: "m3", title: "Mox Sapphire", type: "MTG", category: "CCG", rarity: "Legend", image: "https://via.placeholder.com/240x320?text=MoxSapphire", owned: false, set: "Limited Edition Alpha", subset: "Base" },
+
+    // Yu-Gi-Oh!
+    { id: "y1", title: "Blue-Eyes White Dragon", type: "Yu-Gi-Oh!", category: "CCG", rarity: "Legend", image: "https://via.placeholder.com/240x320?text=BlueEyes", owned: true, set: "Legend of Blue Eyes", subset: "1st Edition" },
+    { id: "y2", title: "Dark Magician", type: "Yu-Gi-Oh!", category: "CCG", rarity: "Epic", image: "https://via.placeholder.com/240x320?text=DarkMagician", owned: true, set: "Legend of Blue Eyes", subset: "Unlimited" },
+    { id: "y3", title: "Red-Eyes Black Dragon", type: "Yu-Gi-Oh!", category: "CCG", rarity: "Epic", image: "https://via.placeholder.com/240x320?text=RedEyes", owned: false, set: "Metal Raiders", subset: "Unlimited" },
+
+    // ===== NON-SPORT CARDS =====
+    // Movie/TV
+    { id: "n1", title: "Star Wars: Luke Skywalker", type: "Movie/TV", category: "Non-Sport", rarity: "Rare", image: "https://via.placeholder.com/240x320?text=Luke", owned: true, set: "1977 Star Wars", subset: "Base" },
+    { id: "n2", title: "Star Wars: Darth Vader", type: "Movie/TV", category: "Non-Sport", rarity: "Epic", image: "https://via.placeholder.com/240x320?text=DarthVader", owned: true, set: "1977 Star Wars", subset: "Base" },
+    { id: "n3", title: "Marvel: Spider-Man", type: "Movie/TV", category: "Non-Sport", rarity: "Rare", image: "https://via.placeholder.com/240x320?text=Spiderman", owned: false, set: "2020 Marvel", subset: "Holo" },
+
+    // Rock/Pop Music
+    { id: "n4", title: "The Beatles", type: "Music", category: "Non-Sport", rarity: "Epic", image: "https://via.placeholder.com/240x320?text=Beatles", owned: true, set: "1964 Music Cards", subset: "Base" },
+    { id: "n5", title: "Elvis Presley", type: "Music", category: "Non-Sport", rarity: "Rare", image: "https://via.placeholder.com/240x320?text=Elvis", owned: false, set: "1956 Music Cards", subset: "Base" },
   ];
 
-  const filtered = cards.filter((c) => {
-    if (activeFilter === "All") return true;
-    if (activeFilter === "Owned") return c.id !== "c3"; // sample: mark c3 as not owned
-    if (activeFilter === "Wishlist") return c.id === "c3" || c.id === "c6"; // sample wishlist
-    return true;
+  // Group by category -> type -> set -> cards
+  const categoryData = {};
+  cards.forEach((card) => {
+    const cat = card.category;
+    const typ = card.type;
+    const st = card.set;
+
+    if (!categoryData[cat]) categoryData[cat] = {};
+    if (!categoryData[cat][typ]) categoryData[cat][typ] = {};
+    if (!categoryData[cat][typ][st]) categoryData[cat][typ][st] = [];
+    categoryData[cat][typ][st].push(card);
   });
+
+  const categoryNames = Object.keys(categoryData).sort();
+
+  const toggleCategory = (category) => {
+    setExpandedCategories((s) => ({ ...s, [category]: !s[category] }));
+  };
+
+  const toggleType = (category, type) => {
+    const key = `${category}||${type}`;
+    setExpandedTypes((s) => ({ ...s, [key]: !s[key] }));
+  };
+
+  const toggleSet = (category, type, setName) => {
+    const key = `${category}||${type}||${setName}`;
+    setExpandedSets((s) => ({ ...s, [key]: !s[key] }));
+  };
 
   const renderCard = ({ item }) => (
     <TouchableOpacity style={styles.collectionCard} onPress={() => alert(`Open ${item.title}`)}>
@@ -258,7 +327,7 @@ const CollectionScreen = () => {
       <View style={styles.collectionInfo}>
         <Text style={styles.collectionName} numberOfLines={1}>{item.title}</Text>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={{ color: '#666', fontSize: 12 }}>{item.type}</Text>
+          <Text style={{ color: '#666', fontSize: 12 }}>{item.subset || item.type}</Text>
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{item.rarity}</Text>
           </View>
@@ -267,8 +336,100 @@ const CollectionScreen = () => {
     </TouchableOpacity>
   );
 
+  const renderSet = (category, type, setName) => {
+    const setCards = categoryData[category][type][setName];
+    const key = `${category}||${type}||${setName}`;
+    const expanded = !!expandedSets[key];
+
+    // subsets within this set
+    const subsets = Array.from(new Set(setCards.map((c) => c.subset || 'Base')));
+    const subsetOptions = ['All', ...subsets];
+    const selectedSubset = subsetSelection[key] || 'All';
+
+    const cardsForSubset = setCards.filter((c) => selectedSubset === 'All' ? true : (c.subset || 'Base') === selectedSubset);
+
+    const owned = cardsForSubset.filter((c) => c.owned);
+    const missing = cardsForSubset.filter((c) => !c.owned);
+
+    const filteredSetCards = cardsForSubset.filter((c) => {
+      if (activeFilter === 'All') return true;
+      if (activeFilter === 'Owned') return c.owned;
+      if (activeFilter === 'Wishlist') return !c.owned;
+      return true;
+    });
+
+    if (activeFilter !== 'All' && filteredSetCards.length === 0) return null;
+
+    return (
+      <View key={key} style={{ marginTop: 10, marginLeft: 12 }}>
+        <TouchableOpacity onPress={() => toggleSet(category, type, setName)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 }}>
+          <Text style={{ fontSize: 14, fontWeight: '700' }}>{setName}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ backgroundColor: '#f16513ff', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, marginRight: 8 }}>
+              <Text style={{ color: '#fff', fontSize: 10, fontWeight: '600' }}>{owned.length}/{cardsForSubset.length}</Text>
+            </View>
+            <Text style={{ color: '#666', fontSize: 12 }}>{expanded ? '▾' : '▸'}</Text>
+          </View>
+        </TouchableOpacity>
+
+        {expanded && (
+          <View>
+            {/* subset selector buttons */}
+            {subsetOptions.length > 1 && (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingVertical: 6, marginLeft: 8 }}>
+                {subsetOptions.map((s) => (
+                  <TouchableOpacity key={s} onPress={() => setSubsetSelection((st) => ({ ...st, [key]: s }))} style={{ marginRight: 6, marginBottom: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, backgroundColor: selectedSubset === s ? '#f16513ff' : '#e8e8e8' }}>
+                    <Text style={{ color: selectedSubset === s ? '#fff' : '#333', fontSize: 11, fontWeight: '600' }}>{s}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {/* Owned */}
+            {owned.length > 0 && (
+              <View style={{ marginBottom: 10 }}>
+                <Text style={{ fontSize: 12, fontWeight: '600', color: '#666', marginBottom: 6, marginLeft: 8 }}>In Set ({owned.length})</Text>
+                <FlatList data={owned} keyExtractor={(i) => i.id} renderItem={renderCard} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
+              </View>
+            )}
+
+            {/* Missing */}
+            {missing.length > 0 && (
+              <View>
+                <Text style={{ fontSize: 12, fontWeight: '600', color: '#999', marginBottom: 6, marginLeft: 8 }}>Missing ({missing.length})</Text>
+                <FlatList data={missing} keyExtractor={(i) => i.id} renderItem={renderCard} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
+              </View>
+            )}
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const renderType = (category, type) => {
+    const typeKey = `${category}||${type}`;
+    const expanded = !!expandedTypes[typeKey];
+    const typeSets = categoryData[category][type];
+    const setNames = Object.keys(typeSets).sort();
+
+    return (
+      <View key={typeKey} style={{ marginTop: 8, marginLeft: 8 }}>
+        <TouchableOpacity onPress={() => toggleType(category, type)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, paddingHorizontal: 6 }}>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: '#333' }}>{type}</Text>
+          <Text style={{ color: '#666', fontSize: 12 }}>{expanded ? '▾' : '▸'}</Text>
+        </TouchableOpacity>
+
+        {expanded && (
+          <View>
+            {setNames.map((setName) => renderSet(category, type, setName))}
+          </View>
+        )}
+      </View>
+    );
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <Text style={{ fontSize: 18, fontWeight: '700' }}>My Collection</Text>
         <TouchableOpacity onPress={() => alert('Sort options')}>
@@ -284,21 +445,27 @@ const CollectionScreen = () => {
         ))}
       </View>
 
-      {filtered.length === 0 ? (
+      {categoryNames.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={{ color: '#777' }}>No cards found.</Text>
         </View>
       ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(i) => i.id}
-          renderItem={renderCard}
-          numColumns={2}
-          columnWrapperStyle={{ justifyContent: 'space-between' }}
-          contentContainerStyle={{ paddingBottom: 40 }}
-        />
+        categoryNames.map((category) => (
+          <View key={category} style={{ marginTop: 12 }}>
+            <TouchableOpacity onPress={() => toggleCategory(category)} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 6, paddingVertical: 10, backgroundColor: '#f0f0f0', borderRadius: 8 }}>
+              <Text style={{ fontSize: 16, fontWeight: '800', color: '#000' }}>{category}</Text>
+              <Text style={{ color: '#666', fontSize: 14 }}>{expandedCategories[category] ? '▾' : '▸'}</Text>
+            </TouchableOpacity>
+
+            {expandedCategories[category] && (
+              <View>
+                {Object.keys(categoryData[category]).sort().map((type) => renderType(category, type))}
+              </View>
+            )}
+          </View>
+        ))
       )}
-    </View>
+    </ScrollView>
   );
 };
 
@@ -402,6 +569,12 @@ export default function App() {
               return <Ionicons name={iconName} size={size} color="white" />;
             },
             headerShown: false,
+            listeners: ({ navigation }) => ({
+              tabPress: (e) => {
+                e.preventDefault();
+                openLogin();
+              },
+            }),
           })}
         >
           <Tab.Screen name="Home" component={HomeScreen} />
@@ -410,6 +583,23 @@ export default function App() {
           <Tab.Screen name="Settings" component={SettingsScreen} />
         </Tab.Navigator>
       </NavigationContainer>
+
+      {/* Full-screen overlay when not logged in */}
+      {!user && (
+        <TouchableOpacity 
+          activeOpacity={1}
+          onPress={openLogin}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0)',
+            zIndex: 10,
+          }}
+        />
+      )}
 
       {/* Login modal rendered at root so it overlays the app */}
       <LoginModal visible={loginVisible} onClose={closeLogin} />
