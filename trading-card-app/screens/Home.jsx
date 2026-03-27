@@ -1,78 +1,142 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, FlatList, TouchableOpacity, ImageBackground, Alert } from 'react-native';
+import React, { useContext } from 'react';
+import { View, Text, ScrollView, FlatList, TouchableOpacity, Image } from 'react-native';
 import styles from '../styles';
 import TopBar from '../components/TopBar';
+import cardsData from '../data/cards';
+import { AuthContext } from '../context/AuthContext';
 
 export default function HomeScreen({ navigation }) {
-  const [pollOptions, setPollOptions] = useState([
-    { id: '1', text: 'Yes', votes: 0 },
-    { id: '2', text: 'No', votes: 0 },
-  ]);
+  const { favoriteSets } = useContext(AuthContext);
 
-  const vote = (id) => {
-    setPollOptions((prev) => prev.map((opt) => (opt.id === id ? { ...opt, votes: opt.votes + 1 } : opt)));
-  };
+  // Get owned cards (simulated based on card number being even)
+  const ownedCards = cardsData
+    .filter((card) => card.number % 2 === 0)
+    .map((card, idx) => ({
+      id: card.id,
+      title: card.name,
+      type: card.type,
+      number: card.number,
+      rarity: idx % 5 === 0 ? 'Legend' : idx % 4 === 0 ? 'Epic' : idx % 3 === 0 ? 'Rare' : 'Common',
+      image: `https://via.placeholder.com/240x320?text=%23${card.number}`,
+      owned: true,
+      set: '2022 Allen & Ginter',
+      subset: 'Base',
+    }));
 
-  const featured = [
-    { id: 'f1', title: 'Bob addis', subtitle: 'Rare', image: 'https://www.tcdb.com/Images/Cards/Baseball/9092/9092-157Fr.jpg' },
-    { id: 'f2', title: 'Ted Williams', subtitle: 'Epic', image: 'https://via.placeholder.com/220x320?text=Field' },
-    { id: 'f3', title: 'Ronaldo', subtitle: 'Legend', image: 'https://via.placeholder.com/220x320?text=Clutch' },
-  ];
+  // Group owned cards by set to find most collected
+  const cardsBySet = {};
+  ownedCards.forEach((card) => {
+    if (!cardsBySet[card.set]) {
+      cardsBySet[card.set] = [];
+    }
+    cardsBySet[card.set].push(card);
+  });
 
-  const renderFeatured = ({ item }) => (
-    <TouchableOpacity style={styles.featuredItem} onPress={() => Alert.alert(`Open ${item.title}`)}>
-      <ImageBackground source={{ uri: item.image }} style={styles.featuredThumb} imageStyle={{ borderRadius: 10 }}>
-        <View style={styles.featuredOverlay} />
-        <View style={styles.featuredMeta}>
-          <Text style={styles.featuredTitle}>{item.title}</Text>
-          <Text style={styles.featuredSubtitle}>{item.subtitle}</Text>
+  // Get most collected set
+  const mostCollectedSet = Object.keys(cardsBySet).sort((a, b) => cardsBySet[b].length - cardsBySet[a].length)[0];
+  const mostCollectedCards = mostCollectedSet ? cardsBySet[mostCollectedSet] : [];
+
+  // Get favorite sets cards (favorites are stored as type||setName keys)
+  const favoriteCards = ownedCards.filter((card) => {
+    const setKey = `${card.type}||${card.set}`;
+    return favoriteSets[setKey];
+  });
+
+  // Render card for horizontal scroll - larger and better display
+  const renderHomeCard = ({ item }) => (
+    <TouchableOpacity
+      style={{
+        width: 120,
+        marginRight: 12,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        overflow: 'hidden',
+        elevation: 2,
+      }}
+      onPress={() => alert(`${item.title}\nTeam: ${item.type}\n${item.rarity}`)}
+    >
+      <Image
+        source={{ uri: item.image }}
+        style={{ width: '100%', height: 160, backgroundColor: '#eee' }}
+      />
+      <View style={{ padding: 8 }}>
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: '700',
+            color: '#333',
+          }}
+          numberOfLines={2}
+        >
+          {item.title}
+        </Text>
+        <View
+          style={{
+            backgroundColor: '#f16513ff',
+            paddingHorizontal: 6,
+            paddingVertical: 2,
+            borderRadius: 4,
+            marginTop: 4,
+            alignSelf: 'flex-start',
+          }}
+        >
+          <Text style={{ fontSize: 10, color: '#fff', fontWeight: '600' }}>
+            {item.rarity}
+          </Text>
         </View>
-      </ImageBackground>
+      </View>
     </TouchableOpacity>
   );
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <TopBar onProfilePress={() => navigation.navigate('Settings')} onNotificationsPress={() => Alert.alert('Notifications pressed')} />
-
-      <View style={{ paddingHorizontal: 6 }}>
-        <ImageBackground
-          source={{ uri: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjnaTnV0jPoGTYJZuVQgPN3D1lySK8LQBEqWSxgssxo4I77RGQmnZKXkFzx3PyHJgjmiXcL7kJHVcgensYsDkNzGaThQ6P1WEuEWjCsmdTWDGXBV3oHMfVI344k6E_zirHOv1-J2DPtPbM/s400/banana+fish.jpg' }}
-          style={styles.hero}
-          imageStyle={{ borderRadius: 14 }}
-        >
-          <View style={styles.heroOverlay} />
-          <View style={styles.heroContent}>
-            <Text style={styles.heroTitle}>Card of the Day</Text>
-            <Text style={styles.heroSubtitle}>banana fishy • Rare</Text>
-            <TouchableOpacity style={styles.ctaButton} onPress={() => Alert.alert('Added to collection')}>
-              <Text style={styles.ctaText}>Add to collection</Text>
-            </TouchableOpacity>
-          </View>
-        </ImageBackground>
-      </View>
+      <TopBar
+        onProfilePress={() => navigation.navigate('Settings')}
+        onNotificationsPress={() => {}}
+      />
 
       <View style={{ marginTop: 14 }}>
-        <Text style={styles.sectionTitle}>Featured</Text>
-        <FlatList data={featured} horizontal keyExtractor={(i) => i.id} renderItem={renderFeatured} showsHorizontalScrollIndicator={false} style={{ paddingLeft: 6 }} />
+        <Text style={styles.sectionTitle}>Cards You Own ({ownedCards.length})</Text>
+        <FlatList
+          data={ownedCards}
+          horizontal
+          keyExtractor={(i) => i.id}
+          renderItem={renderHomeCard}
+          showsHorizontalScrollIndicator={false}
+          style={{ paddingLeft: 6 }}
+        />
       </View>
 
-      <View style={{ marginTop: 12, paddingHorizontal: 6 }}>
-        <View style={styles.section}>
-          <Text style={styles.title}>Poll of the Day</Text>
-          <Text style={styles.pollQuestion}>Do you like today's card?</Text>
+      {mostCollectedCards.length > 0 && (
+        <View style={{ marginTop: 20 }}>
+          <Text style={styles.sectionTitle}>Your Most Collected Set</Text>
+          <Text style={{ fontSize: 12, color: '#666', paddingHorizontal: 6, marginBottom: 8 }}>
+            {mostCollectedSet} ({mostCollectedCards.length} cards)
+          </Text>
           <FlatList
-            data={pollOptions}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity style={styles.pollOption} onPress={() => vote(item.id)}>
-                <Text style={{ fontWeight: '600' }}>{item.text}</Text>
-                <Text style={{ color: '#888' }}>{item.votes} votes</Text>
-              </TouchableOpacity>
-            )}
+            data={mostCollectedCards}
+            horizontal
+            keyExtractor={(i) => i.id}
+            renderItem={renderHomeCard}
+            showsHorizontalScrollIndicator={false}
+            style={{ paddingLeft: 6 }}
           />
         </View>
-      </View>
+      )}
+
+      {favoriteCards.length > 0 && (
+        <View style={{ marginTop: 20 }}>
+          <Text style={styles.sectionTitle}>Your Favorites ⭐</Text>
+          <FlatList
+            data={favoriteCards}
+            horizontal
+            keyExtractor={(i) => i.id}
+            renderItem={renderHomeCard}
+            showsHorizontalScrollIndicator={false}
+            style={{ paddingLeft: 6 }}
+          />
+        </View>
+      )}
     </ScrollView>
   );
 }

@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
-import { AuthContext } from './context/AuthContext';
+import { AuthContext, AuthProvider } from './context/AuthContext';
 import styles from './styles';
 import HomeScreen from './screens/Home';
 import SearchScreen from './screens/Search';
@@ -27,16 +27,16 @@ export default function App() {
   if (showLogin || !user) {
     const fakeNav = { replace: () => closeLogin() };
     return (
-      <AuthContext.Provider value={auth}>
+      <AuthProvider authValue={auth}>
         <View style={styles.container}>
           <LoginScreen navigation={fakeNav} />
         </View>
-      </AuthContext.Provider>
+      </AuthProvider>
     );
   }
 
   return (
-    <AuthContext.Provider value={auth}>
+    <AuthProvider authValue={auth}>
       <NavigationContainer>
         <Tab.Navigator
           screenOptions={({ route }) => ({
@@ -63,6 +63,6 @@ export default function App() {
           <Tab.Screen name="Settings" component={SettingsScreen} />
         </Tab.Navigator>
       </NavigationContainer>
-    </AuthContext.Provider>
+    </AuthProvider>
   );
 }

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Image, ScrollView } from 'react-native';
 import styles from '../styles';
 import { Ionicons } from '@expo/vector-icons';
 import cardsData from '../data/cards';
+import { AuthContext } from '../context/AuthContext';
 
 export default function CollectionScreen() {
+  const { favoriteSets, toggleFavorite } = useContext(AuthContext);
   const [activeFilter, setActiveFilter] = useState('All');
   const [sortBy, setSortBy] = useState('name');
   const [showSortMenu, setShowSortMenu] = useState(false);
@@ -61,8 +63,8 @@ export default function CollectionScreen() {
     setExpandedSets((s) => ({ ...s, [key]: !s[key] }));
   };
 
-  const renderCard = ({ item }) => (
-    <TouchableOpacity style={styles.collectionCard} onPress={() => alert(`${item.title}\nTeam: ${item.type}\n${item.rarity}`)}>
+  const renderCard = ({ item }, isGreyed = false) => (
+    <TouchableOpacity style={[styles.collectionCard, isGreyed && { opacity: 0.5 }]} onPress={() => alert(`${item.title}\nTeam: ${item.type}\n${item.rarity}`)}>
       <Image source={{ uri: item.image }} style={styles.collectionImage} />
       <View style={styles.collectionInfo}>
         <Text style={styles.collectionName} numberOfLines={1}>{item.title}</Text>
@@ -80,6 +82,7 @@ export default function CollectionScreen() {
     const setCards = typeData[type][setName];
     const key = `${type}||${setName}`;
     const expanded = !!expandedSets[key];
+    const isFavorited = !!favoriteSets[key];
 
     const subsets = Array.from(new Set(setCards.map((c) => c.subset || 'Base')));
     const subsetOptions = ['All', ...subsets];
@@ -89,8 +92,19 @@ export default function CollectionScreen() {
 
     const owned = cardsForSubset.filter((c) => c.owned);
     const missing = cardsForSubset.filter((c) => !c.owned);
+    
+    // Calculate ownership percentage
+    const ownershipPercentage = cardsForSubset.length > 0 ? (owned.length / cardsForSubset.length) * 100 : 0;
+    const isHighOwnership = ownershipPercentage > 65;
 
-    const filteredSetCards = cardsForSubset.filter((c) => {
+    // Determine which cards to display
+    let displayCards = cardsForSubset;
+    if (isHighOwnership) {
+      // Show only missing cards when > 65% owned
+      displayCards = missing;
+    }
+
+    const filteredSetCards = displayCards.filter((c) => {
       if (activeFilter === 'All') return true;
       if (activeFilter === 'Owned') return c.owned;
       if (activeFilter === 'Wishlist') return !c.owned;
@@ -102,7 +116,12 @@ export default function CollectionScreen() {
     return (
       <View key={key} style={{ marginTop: 10, marginLeft: 12 }}>
         <TouchableOpacity onPress={() => toggleSet(type, setName)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 }}>
-          <Text style={{ fontSize: 14, fontWeight: '700' }}>{setName}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <Text style={{ fontSize: 14, fontWeight: '700' }}>{setName}</Text>
+            <TouchableOpacity onPress={() => toggleFavorite(key)} style={{ marginLeft: 8 }}>
+              <Ionicons name={isFavorited ? 'star' : 'star-outline'} size={18} color={isFavorited ? '#f16513ff' : '#999'} />
+            </TouchableOpacity>
+          </View>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <View style={{ backgroundColor: '#f16513ff', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, marginRight: 8 }}>
               <Text style={{ color: '#fff', fontSize: 10, fontWeight: '600' }}>{owned.length}/{cardsForSubset.length}</Text>
@@ -123,18 +142,27 @@ export default function CollectionScreen() {
               </View>
             )}
 
-            {owned.length > 0 && (
-              <View style={{ marginBottom: 10 }}>
-                <Text style={{ fontSize: 12, fontWeight: '600', color: '#666', marginBottom: 6, marginLeft: 8 }}>In Set ({owned.length})</Text>
-                <FlatList data={owned} keyExtractor={(i) => i.id} renderItem={renderCard} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
-              </View>
-            )}
-
-            {missing.length > 0 && (
+            {isHighOwnership ? (
               <View>
                 <Text style={{ fontSize: 12, fontWeight: '600', color: '#999', marginBottom: 6, marginLeft: 8 }}>Missing ({missing.length})</Text>
-                <FlatList data={missing} keyExtractor={(i) => i.id} renderItem={renderCard} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
+                <FlatList data={missing} keyExtractor={(i) => i.id} renderItem={(props) => renderCard(props, true)} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
               </View>
+            ) : (
+              <>
+                {owned.length > 0 && (
+                  <View style={{ marginBottom: 10 }}>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: '#666', marginBottom: 6, marginLeft: 8 }}>In Set ({owned.length})</Text>
+                    <FlatList data={owned} keyExtractor={(i) => i.id} renderItem={(props) => renderCard(props, false)} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
+                  </View>
+                )}
+
+                {missing.length > 0 && (
+                  <View>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: '#999', marginBottom: 6, marginLeft: 8 }}>Missing ({missing.length})</Text>
+                    <FlatList data={missing} keyExtractor={(i) => i.id} renderItem={(props) => renderCard(props, false)} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
+                  </View>
+                )}
+              </>
             )}
           </View>
         )}
