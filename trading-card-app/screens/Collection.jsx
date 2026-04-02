@@ -105,29 +105,19 @@ export default function CollectionScreen() {
     const selectedSubset = subsetSelection[key] || 'All';
 
     const cardsForSubset = setCards.filter((c) => selectedSubset === 'All' ? true : (c.subset || 'Base') === selectedSubset);
-
     const owned = cardsForSubset.filter((c) => c.owned);
     const missing = cardsForSubset.filter((c) => !c.owned);
-    
-    // Calculate ownership percentage
-    const ownershipPercentage = cardsForSubset.length > 0 ? (owned.length / cardsForSubset.length) * 100 : 0;
-    const isHighOwnership = ownershipPercentage > 65;
+    const allCards = cardsForSubset;
 
-    // Determine which cards to display
-    let displayCards = cardsForSubset;
-    if (isHighOwnership && activeFilter === 'All') {
-      // Show only missing cards when > 65% owned and no specific filter is active
-      displayCards = missing;
+    const showCards = activeFilter === 'Owned' ? owned : activeFilter === 'Missing' ? missing : allCards;
+
+    if (showCards.length === 0) {
+      return (
+        <View key={key} style={{ marginTop: 10, marginLeft: 12 }}>
+          <Text style={{ paddingLeft: 8, color: '#999', fontSize: 12 }}>No cards in this filter.</Text>
+        </View>
+      );
     }
-
-    const filteredSetCards = displayCards.filter((c) => {
-      if (activeFilter === 'All') return true;
-      if (activeFilter === 'Owned') return c.owned;
-      if (activeFilter === 'Missing') return !c.owned;
-      return true;
-    });
-
-    if (activeFilter !== 'All' && filteredSetCards.length === 0) return null;
 
     return (
       <View key={key} style={{ marginTop: 10, marginLeft: 12 }}>
@@ -155,28 +145,10 @@ export default function CollectionScreen() {
               </View>
             )}
 
-            {isHighOwnership ? (
-              <View>
-                <Text style={{ fontSize: 12, fontWeight: '600', color: '#999', marginBottom: 6, marginLeft: 8 }}>Missing ({missing.length})</Text>
-                <FlatList data={missing} keyExtractor={(i) => i.id} renderItem={renderCard} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
-              </View>
-            ) : (
-              <>
-                {owned.length > 0 && (
-                  <View style={{ marginBottom: 10 }}>
-                    <Text style={{ fontSize: 12, fontWeight: '600', color: '#666', marginBottom: 6, marginLeft: 8 }}>In Set ({owned.length})</Text>
-                    <FlatList data={owned} keyExtractor={(i) => i.id} renderItem={renderCard} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
-                  </View>
-                )}
-
-                {missing.length > 0 && (
-                  <View>
-                    <Text style={{ fontSize: 12, fontWeight: '600', color: '#999', marginBottom: 6, marginLeft: 8 }}>Missing ({missing.length})</Text>
-                    <FlatList data={missing} keyExtractor={(i) => i.id} renderItem={(props) => renderCard(props, false)} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
-                  </View>
-                )}
-              </>
-            )}
+            <View>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: '#666', marginBottom: 6, marginLeft: 8 }}>{activeFilter} ({showCards.length})</Text>
+              <FlatList data={showCards} keyExtractor={(i) => i.id} renderItem={renderCard} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
+            </View>
           </View>
         )}
       </View>
