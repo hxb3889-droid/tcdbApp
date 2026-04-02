@@ -1,0 +1,60 @@
+id,number,name,team,type
+1,1,Yadier Molina,St. Louis Cardinals,Baseball
+2,2,Luis Robert,Chicago White Sox,Baseball
+3,3,Ernie Banks,Chicago Cubs,Baseball
+4,4,Nolan Arenado,St. Louis Cardinals,Baseball
+5,5,Reggie Jackson,Oakland Athletics,Baseball
+6,6,Jacob deGrom,New York Mets,Baseball
+7,7,Shane Baz RC,Tampa Bay Rays,Baseball
+8,8,Alex Bregman,Houston Astros,Baseball
+9,9,Frank Thomas,Chicago White Sox,Baseball
+10,10,Josh Donaldson,New York Yankees,Baseball
+11,11,Aaron Judge,New York Yankees,Baseball
+12,12,Rickey Henderson,Oakland Athletics,Baseball
+13,13,Giancarlo Stanton,New York Yankees,Baseball
+14,14,Ronald Acuña Jr.,Atlanta Braves,Baseball
+15,15,Fernando Tatis Jr.,San Diego Padres,Baseball
+16,16,Bryce Harper,Philadelphia Phillies,Baseball
+17,17,George Brett,Kansas City Royals,Baseball
+18,18,Freddie Freeman,Los Angeles Dodgers,Baseball
+19,19,Ivan Rodriguez,Texas Rangers,Baseball
+20,20,Stephen Strasburg,Washington Nationals,Baseball
+21,21,Pedro Martinez,Boston Red Sox,Baseball
+22,22,Mariano Rivera,New York Yankees,Baseball
+23,23,Larry Walker,Colorado Rockies,Baseball
+24,24,Kris Bryant,Colorado Rockies,Baseball
+25,25,Paul Goldschmidt,St. Louis Cardinals,Baseball
+26,26,Lou Gehrig,New York Yankees,Baseball
+27,27,Walker Buehler,Los Angeles Dodgers,Baseball
+28,28,Whit Merrifield,Kansas City Royals,Baseball
+29,29,Pete Alonso,New York Mets,Baseball
+30,30,Joey Votto,Cincinnati Reds,Baseball
+31,31,Corbin Burnes,Milwaukee Brewers,Baseball
+32,32,Bo Bichette,Toronto Blue Jays,Baseball
+33,33,Thurman Munson,New York Yankees,Baseball
+34,34,Francisco Lindor,New York Mets,Baseball
+35,35,Mike Trout,Los Angeles Angels,Baseball
+36,36,Jarred Kelenic,Seattle Mariners,Baseball
+37,37,Yoan Moncada,Chicago White Sox,Baseball
+38,38,Johnny Bench,Cincinnati Reds,Baseball
+39,39,Ken Griffey Jr.,Seattle Mariners,Baseball
+40,40,Greg Maddux,Chicago Cubs,Baseball
+41,41,Mike Schmidt,Philadelphia Phillies,Baseball
+42,42,Babe Ruth,New York Yankees,Baseball
+43,43,Xander Bogaerts,Boston Red Sox,Baseball
+44,44,Eddie Murray,Baltimore Orioles,Baseball
+45,45,Hank Aaron,Atlanta Braves,Baseball
+46,46,Rafael Devers,Boston Red Sox,Baseball
+47,47,Yonny Hernandez RC,Arizona Diamondbacks,Baseball
+48,48,Jazz Chisholm Jr.,Miami Marlins,Baseball
+49,49,Mookie Betts,Los Angeles Dodgers,Baseball
+50,50,Todd Helton,Colorado Rockies,Baseball
+51,51,Justin Verlander,Houston Astros,Baseball
+52,52,Brandon Crawford,San Francisco Giants,Baseball
+53,53,Albert Pujols,St. Louis Cardinals,Baseball
+54,54,Roberto Clemente,Pittsburgh Pirates,Baseball
+55,55,Blake Snell,San Diego Padres,Baseball
+56,56,Anthony Rizzo,New York Yankees,Baseball
+57,57,Matt Olson,Atlanta Braves,Baseball
+58,58,Shohei Ohtani,Los Angeles Angels,Baseball
+59,59,Al Kaline,Detroit Tigers,Baseball

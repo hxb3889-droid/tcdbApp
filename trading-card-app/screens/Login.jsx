@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import { View, TextInput, Text, TouchableOpacity, Alert } from 'react-native';
 import styles from '../styles';
 import { AuthContext } from '../context/AuthContext';
@@ -9,6 +9,7 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const tempId = 'hello';
   const tempPassword = 'bob';
+  const passwordRef = useRef(null);
 
   const handleLogin = () => {
     if (id.toLowerCase() === tempId && password === tempPassword) {
@@ -24,8 +25,24 @@ export default function LoginScreen({ navigation }) {
     <View style={[styles.container, { justifyContent: 'center' }] }>
       <View style={{ backgroundColor: '#fff', padding: 18, borderRadius: 8 }}>
         <Text style={{ fontSize: 20, fontWeight: '700', marginBottom: 8 }}>Sign in</Text>
-        <TextInput placeholder="id" value={id} onChangeText={setId} style={{ borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 6, padding: 8, marginBottom: 8 }} />
-        <TextInput placeholder="password" value={password} secureTextEntry onChangeText={setPassword} style={{ borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 6, padding: 8, marginBottom: 12 }} />
+        <TextInput 
+          placeholder="id" 
+          value={id} 
+          onChangeText={setId} 
+          style={{ borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 6, padding: 8, marginBottom: 8 }} 
+          returnKeyType="next"
+          onSubmitEditing={() => passwordRef.current?.focus()}
+        />
+        <TextInput 
+          ref={passwordRef}
+          placeholder="password" 
+          value={password} 
+          secureTextEntry 
+          onChangeText={setPassword} 
+          style={{ borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 6, padding: 8, marginBottom: 12 }} 
+          returnKeyType="go"
+          onSubmitEditing={handleLogin}
+        />
         <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
           <TouchableOpacity onPress={() => navigation.replace('Main')} style={{ marginRight: 12 }}>
             <Text style={{ color: '#666' }}>Cancel</Text>

@@ -4,9 +4,11 @@ import styles from '../styles';
 import { Ionicons } from '@expo/vector-icons';
 import cardsData from '../data/cards';
 import { AuthContext } from '../context/AuthContext';
+import { getTheme } from '../theme';
 
 export default function CollectionScreen() {
-  const { favoriteSets, toggleFavorite } = useContext(AuthContext);
+  const { favoriteCards, toggleFavorite, darkMode } = useContext(AuthContext);
+  const theme = getTheme(darkMode);
   const [activeFilter, setActiveFilter] = useState('All');
   const [sortBy, setSortBy] = useState('name');
   const [showSortMenu, setShowSortMenu] = useState(false);
@@ -14,19 +16,29 @@ export default function CollectionScreen() {
   const [expandedSets, setExpandedSets] = useState({});
   const [subsetSelection, setSubsetSelection] = useState({});
 
-  const filters = ['All', 'Owned', 'Wishlist'];
+  const filters = ['All', 'Owned', 'Missing'];
   const sortOptions = ['name', 'number', 'rarity'];
 
+  const getRarityColor = (rarity) => {
+    switch (rarity) {
+      case 'Legend': return '#FFD700'; // gold
+      case 'Epic': return '#9C27B0'; // purple
+      case 'Rare': return '#2196F3'; // blue
+      case 'Common': return '#4CAF50'; // green
+      default: return '#eee';
+    }
+  };
+
   // Transform CSV card data into collection format
-  const cards = cardsData.map((card, idx) => ({
+  const cards = cardsData.filter(card => card.name !== "Unknown").map((card, idx) => ({
     id: card.id,
     title: card.name,
     type: card.type,
     number: card.number,
     rarity: idx % 5 === 0 ? 'Legend' : idx % 4 === 0 ? 'Epic' : idx % 3 === 0 ? 'Rare' : 'Common',
     image: `https://via.placeholder.com/240x320?text=%23${card.number}`,
-    owned: card.number % 2 === 0,
-    set: '2022 Allen & Ginter',
+    owned: card.owned,
+    set: '1987 Topps',
     subset: 'Base',
   }));
 
@@ -63,14 +75,19 @@ export default function CollectionScreen() {
     setExpandedSets((s) => ({ ...s, [key]: !s[key] }));
   };
 
-  const renderCard = ({ item }, isGreyed = false) => (
-    <TouchableOpacity style={[styles.collectionCard, isGreyed && { opacity: 0.5 }]} onPress={() => alert(`${item.title}\nTeam: ${item.type}\n${item.rarity}`)}>
+  const renderCard = ({ item }) => (
+    <TouchableOpacity style={[styles.collectionCard, { backgroundColor: item.owned ? 'rgba(0,255,0,0.1)' : 'rgba(255,0,0,0.1)' }]} onPress={() => alert(`${item.title}\nTeam: ${item.type}\n${item.rarity}`)}>
       <Image source={{ uri: item.image }} style={styles.collectionImage} />
       <View style={styles.collectionInfo}>
-        <Text style={styles.collectionName} numberOfLines={1}>{item.title}</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={styles.collectionName} numberOfLines={1}>{item.title}</Text>
+          <TouchableOpacity onPress={() => toggleFavorite(item.id)} style={{ marginLeft: 4 }}>
+            <Ionicons name={favoriteCards[item.id] ? 'star' : 'star-outline'} size={16} color={favoriteCards[item.id] ? '#f16513ff' : '#999'} />
+          </TouchableOpacity>
+        </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={{ color: '#666', fontSize: 12 }}>{item.subset || item.type}</Text>
-          <View style={styles.badge}>
+          <View style={[styles.badge, { backgroundColor: getRarityColor(item.rarity) }]}>
             <Text style={styles.badgeText}>{item.rarity}</Text>
           </View>
         </View>
@@ -82,7 +99,6 @@ export default function CollectionScreen() {
     const setCards = typeData[type][setName];
     const key = `${type}||${setName}`;
     const expanded = !!expandedSets[key];
-    const isFavorited = !!favoriteSets[key];
 
     const subsets = Array.from(new Set(setCards.map((c) => c.subset || 'Base')));
     const subsetOptions = ['All', ...subsets];
@@ -99,15 +115,15 @@ export default function CollectionScreen() {
 
     // Determine which cards to display
     let displayCards = cardsForSubset;
-    if (isHighOwnership) {
-      // Show only missing cards when > 65% owned
+    if (isHighOwnership && activeFilter === 'All') {
+      // Show only missing cards when > 65% owned and no specific filter is active
       displayCards = missing;
     }
 
     const filteredSetCards = displayCards.filter((c) => {
       if (activeFilter === 'All') return true;
       if (activeFilter === 'Owned') return c.owned;
-      if (activeFilter === 'Wishlist') return !c.owned;
+      if (activeFilter === 'Missing') return !c.owned;
       return true;
     });
 
@@ -118,9 +134,6 @@ export default function CollectionScreen() {
         <TouchableOpacity onPress={() => toggleSet(type, setName)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
             <Text style={{ fontSize: 14, fontWeight: '700' }}>{setName}</Text>
-            <TouchableOpacity onPress={() => toggleFavorite(key)} style={{ marginLeft: 8 }}>
-              <Ionicons name={isFavorited ? 'star' : 'star-outline'} size={18} color={isFavorited ? '#f16513ff' : '#999'} />
-            </TouchableOpacity>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <View style={{ backgroundColor: '#f16513ff', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, marginRight: 8 }}>
@@ -145,14 +158,14 @@ export default function CollectionScreen() {
             {isHighOwnership ? (
               <View>
                 <Text style={{ fontSize: 12, fontWeight: '600', color: '#999', marginBottom: 6, marginLeft: 8 }}>Missing ({missing.length})</Text>
-                <FlatList data={missing} keyExtractor={(i) => i.id} renderItem={(props) => renderCard(props, true)} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
+                <FlatList data={missing} keyExtractor={(i) => i.id} renderItem={renderCard} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
               </View>
             ) : (
               <>
                 {owned.length > 0 && (
                   <View style={{ marginBottom: 10 }}>
                     <Text style={{ fontSize: 12, fontWeight: '600', color: '#666', marginBottom: 6, marginLeft: 8 }}>In Set ({owned.length})</Text>
-                    <FlatList data={owned} keyExtractor={(i) => i.id} renderItem={(props) => renderCard(props, false)} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
+                    <FlatList data={owned} keyExtractor={(i) => i.id} renderItem={renderCard} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
                   </View>
                 )}
 

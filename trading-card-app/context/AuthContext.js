@@ -3,17 +3,28 @@ import { createContext, useState } from 'react';
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children, authValue }) => {
+  const [favoriteCards, setFavoriteCards] = useState({});
   const [favoriteSets, setFavoriteSets] = useState({});
+  const [darkMode, setDarkMode] = useState(false);
 
-  const toggleFavorite = (setId) => {
-    setFavoriteSets((s) => ({ ...s, [setId]: !s[setId] }));
+  const toggleFavorite = (cardId) => {
+    setFavoriteCards((s) => ({ ...s, [cardId]: !s[cardId] }));
+  };
+
+  const toggleFavoriteSet = (setKey) => {
+    setFavoriteSets((s) => ({ ...s, [setKey]: !s[setKey] }));
   };
 
   const contextValue = {
     ...authValue,
+    favoriteCards,
+    setFavoriteCards,
+    toggleFavorite,
     favoriteSets,
     setFavoriteSets,
-    toggleFavorite,
+    toggleFavoriteSet,
+    darkMode,
+    setDarkMode,
   };
 
   return (

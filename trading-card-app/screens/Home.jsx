@@ -4,13 +4,15 @@ import styles from '../styles';
 import TopBar from '../components/TopBar';
 import cardsData from '../data/cards';
 import { AuthContext } from '../context/AuthContext';
+import { getTheme } from '../theme';
 
 export default function HomeScreen({ navigation }) {
-  const { favoriteSets } = useContext(AuthContext);
+  const { favoriteCards, darkMode } = useContext(AuthContext);
+  const theme = getTheme(darkMode);
 
   // Get owned cards (simulated based on card number being even)
   const ownedCards = cardsData
-    .filter((card) => card.number % 2 === 0)
+    .filter((card) => card.owned)
     .map((card, idx) => ({
       id: card.id,
       title: card.name,
@@ -18,8 +20,8 @@ export default function HomeScreen({ navigation }) {
       number: card.number,
       rarity: idx % 5 === 0 ? 'Legend' : idx % 4 === 0 ? 'Epic' : idx % 3 === 0 ? 'Rare' : 'Common',
       image: `https://via.placeholder.com/240x320?text=%23${card.number}`,
-      owned: true,
-      set: '2022 Allen & Ginter',
+      owned: card.owned,
+      set: '1987 Topps',
       subset: 'Base',
     }));
 
@@ -36,11 +38,8 @@ export default function HomeScreen({ navigation }) {
   const mostCollectedSet = Object.keys(cardsBySet).sort((a, b) => cardsBySet[b].length - cardsBySet[a].length)[0];
   const mostCollectedCards = mostCollectedSet ? cardsBySet[mostCollectedSet] : [];
 
-  // Get favorite sets cards (favorites are stored as type||setName keys)
-  const favoriteCards = ownedCards.filter((card) => {
-    const setKey = `${card.type}||${card.set}`;
-    return favoriteSets[setKey];
-  });
+  // Get favorite cards by ID
+  const favoritedCards = ownedCards.filter((card) => favoriteCards && favoriteCards[card.id]);
 
   // Render card for horizontal scroll - larger and better display
   const renderHomeCard = ({ item }) => (
@@ -89,14 +88,14 @@ export default function HomeScreen({ navigation }) {
   );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} contentContainerStyle={{ paddingBottom: 40 }}>
       <TopBar
         onProfilePress={() => navigation.navigate('Settings')}
         onNotificationsPress={() => {}}
       />
 
       <View style={{ marginTop: 14 }}>
-        <Text style={styles.sectionTitle}>Cards You Own ({ownedCards.length})</Text>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Cards You Own ({ownedCards.length})</Text>
         <FlatList
           data={ownedCards}
           horizontal
@@ -109,8 +108,8 @@ export default function HomeScreen({ navigation }) {
 
       {mostCollectedCards.length > 0 && (
         <View style={{ marginTop: 20 }}>
-          <Text style={styles.sectionTitle}>Your Most Collected Set</Text>
-          <Text style={{ fontSize: 12, color: '#666', paddingHorizontal: 6, marginBottom: 8 }}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Your Most Collected Set</Text>
+          <Text style={{ fontSize: 12, color: theme.textSecondary, paddingHorizontal: 6, marginBottom: 8 }}>
             {mostCollectedSet} ({mostCollectedCards.length} cards)
           </Text>
           <FlatList
@@ -124,11 +123,11 @@ export default function HomeScreen({ navigation }) {
         </View>
       )}
 
-      {favoriteCards.length > 0 && (
+      {favoritedCards.length > 0 && (
         <View style={{ marginTop: 20 }}>
-          <Text style={styles.sectionTitle}>Your Favorites ⭐</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Your Favorites ⭐</Text>
           <FlatList
-            data={favoriteCards}
+            data={favoritedCards}
             horizontal
             keyExtractor={(i) => i.id}
             renderItem={renderHomeCard}
