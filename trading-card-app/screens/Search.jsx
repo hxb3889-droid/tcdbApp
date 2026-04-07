@@ -7,8 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { getTheme } from '../theme';
 
 export default function SearchScreen() {
-  const { favoriteCards, toggleFavorite, darkMode } = React.useContext(AuthContext);
-  const theme = getTheme(darkMode);
+  const { favoriteCards, toggleFavorite } = React.useContext(AuthContext);
+  const theme = getTheme(false); // Always use light theme
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("All");
 

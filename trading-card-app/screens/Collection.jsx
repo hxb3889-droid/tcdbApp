@@ -6,15 +6,18 @@ import cardsData from '../data/cards';
 import { AuthContext } from '../context/AuthContext';
 import { getTheme } from '../theme';
 
-export default function CollectionScreen() {
-  const { favoriteCards, toggleFavorite, darkMode } = useContext(AuthContext);
-  const theme = getTheme(darkMode);
+export default function CollectionScreen({ route }) {
+  const { favoriteCards, toggleFavorite } = useContext(AuthContext);
+  const theme = getTheme(false); // Always use light theme
   const [activeFilter, setActiveFilter] = useState('All');
   const [sortBy, setSortBy] = useState('name');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [expandedTypes, setExpandedTypes] = useState({});
   const [expandedSets, setExpandedSets] = useState({});
   const [subsetSelection, setSubsetSelection] = useState({});
+  
+  const initialSetName = route?.params?.setName;
+  const [initialized, setInitialized] = React.useState(false);
 
   const filters = ['All', 'Owned', 'Missing'];
   const sortOptions = ['name', 'number', 'rarity'];
@@ -40,6 +43,7 @@ export default function CollectionScreen() {
     owned: card.owned,
     set: '1987 Topps',
     subset: 'Base',
+    icon: card.icon,
   }));
 
   // Sort cards based on sortBy preference
@@ -66,6 +70,22 @@ export default function CollectionScreen() {
 
   const typeNames = Object.keys(typeData).sort();
 
+  React.useEffect(() => {
+    if (initialSetName && !initialized && typeNames.length > 0) {
+      for (const type of typeNames) {
+        if (typeData[type] && typeData[type][initialSetName]) {
+          setExpandedTypes((prev) => ({ ...prev, [type]: true }));
+          setExpandedSets((prev) => ({
+            ...prev,
+            [`${type}||${initialSetName}`]: true,
+          }));
+          break;
+        }
+      }
+      setInitialized(true);
+    }
+  }, [initialSetName, initialized, typeNames, typeData]);
+
   const toggleType = (type) => {
     setExpandedTypes((s) => ({ ...s, [type]: !s[type] }));
   };
@@ -75,20 +95,38 @@ export default function CollectionScreen() {
     setExpandedSets((s) => ({ ...s, [key]: !s[key] }));
   };
 
+  const getCardTypeIcon = (iconName) => {
+    const iconMap = {
+      'baseball': 'baseball',
+      'basketball': 'basketball',
+      'football': 'football',
+      'ice-hockey': 'ice-hockey',
+      'soccer': 'soccer',
+    };
+    return iconMap[iconName] || 'baseball';
+  };
+
   const renderCard = ({ item }) => (
-    <TouchableOpacity style={[styles.collectionCard, { backgroundColor: item.owned ? 'rgba(0,255,0,0.1)' : 'rgba(255,0,0,0.1)' }]} onPress={() => alert(`${item.title}\nTeam: ${item.type}\n${item.rarity}`)}>
+    <TouchableOpacity style={[styles.collectionCard, { backgroundColor: item.owned ? '#f0f9f6' : '#fff5f5', borderColor: item.owned ? '#4CAF50' : '#FF5252', borderWidth: 2 }]} onPress={() => alert(`${item.title}\nTeam: ${item.type}${item.owned ? '\nOwned' : '\nMissing'}`)}>
       <Image source={{ uri: item.image }} style={styles.collectionImage} />
       <View style={styles.collectionInfo}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={styles.collectionName} numberOfLines={1}>{item.title}</Text>
+          <Text style={[styles.collectionName, { fontStyle: item.owned ? 'normal' : 'italic' }]} numberOfLines={1}>{item.title}</Text>
           <TouchableOpacity onPress={() => toggleFavorite(item.id)} style={{ marginLeft: 4 }}>
             <Ionicons name={favoriteCards[item.id] ? 'star' : 'star-outline'} size={16} color={favoriteCards[item.id] ? '#f16513ff' : '#999'} />
           </TouchableOpacity>
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={{ color: '#666', fontSize: 12 }}>{item.subset || item.type}</Text>
-          <View style={[styles.badge, { backgroundColor: getRarityColor(item.rarity) }]}>
-            <Text style={styles.badgeText}>{item.rarity}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <Ionicons name={getCardTypeIcon(item.icon)} size={14} color="#666" style={{ marginRight: 4 }} />
+            <Text style={{ color: '#666', fontSize: 12, flex: 1, fontStyle: item.owned ? 'normal' : 'italic' }} numberOfLines={1}>{item.subset || item.type}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 4 }}>
+            {!item.owned && (
+              <View style={[styles.badge, { backgroundColor: '#FF5252' }]}>
+                <Text style={styles.badgeText}>Missing</Text>
+              </View>
+            )}
           </View>
         </View>
       </View>

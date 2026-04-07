@@ -3,13 +3,23 @@ import { View, Text, Image, TouchableOpacity, ScrollView, Switch, TextInput, Ale
 import styles from '../styles';
 import { AuthContext } from '../context/AuthContext';
 import { getTheme } from '../theme';
+import cardsData from '../data/cards';
 
 export default function SettingsScreen() {
-  const { user, setUser, darkMode, setDarkMode } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
+  const theme = getTheme(false); // Always use light theme
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [username, setUsername] = useState(user?.name || 'User Name');
   const [email, setEmail] = useState(user?.email || 'user@example.com');
-  const theme = getTheme(darkMode);
+
+  // Calculate collection stats
+  const cards = cardsData.filter(card => card.name !== "Unknown").map((card) => ({
+    owned: card.owned,
+    set: '1987 Topps',
+  }));
+  
+  const totalCardsOwned = cards.filter(card => card.owned).length;
+  const uniqueSets = new Set(cards.map(card => card.set)).size;
 
   const handleSave = () => {
     if (user) {
@@ -44,15 +54,25 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      <View style={[styles.section, { backgroundColor: '#f0f0f0', marginHorizontal: 8, marginVertical: 12, borderRadius: 8, padding: 12 }]}>
+        <Text style={[styles.sectionTitle, { color: theme.text, marginBottom: 12 }]}>Collection Stats</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={{ fontSize: 28, fontWeight: '700', color: '#4CAF50' }}>{totalCardsOwned}</Text>
+            <Text style={{ color: '#666', fontSize: 12, marginTop: 4 }}>Cards Owned</Text>
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={{ fontSize: 28, fontWeight: '700', color: '#f16513ff' }}>{uniqueSets}</Text>
+            <Text style={{ color: '#666', fontSize: 12, marginTop: 4 }}>Sets Owned</Text>
+          </View>
+        </View>
+      </View>
+
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.text }]}>Preferences</Text>
-        <View style={[styles.row, { backgroundColor: theme.card, borderBottomColor: theme.border, borderBottomWidth: 1 }]}>
+        <View style={[styles.row, { backgroundColor: theme.card }]}>
           <Text style={[styles.label, { color: theme.text }]}>Push Notifications</Text>
           <Switch value={notificationsEnabled} onValueChange={setNotificationsEnabled} />
-        </View>
-        <View style={[styles.row, { backgroundColor: theme.card }]}>
-          <Text style={[styles.label, { color: theme.text }]}>Dark Mode</Text>
-          <Switch value={darkMode} onValueChange={setDarkMode} />
         </View>
       </View>
 

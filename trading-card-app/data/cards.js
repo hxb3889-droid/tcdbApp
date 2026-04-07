@@ -793,6 +793,34 @@ const csvData = `1,Roger Clemens RB,
 791,Lance Parrish,
 792,Checklist: 661-792 CL,`;
 
+// Helper function to determine card type icon based on name
+const getCardTypeIcon = (name, type) => {
+  const nameLower = name.toLowerCase();
+  
+  // Check for basketball keywords
+  if (nameLower.includes('basketball') || nameLower.includes('nba') || nameLower.includes('hoops')) {
+    return 'basketball';
+  }
+  
+  // Check for football keywords
+  if (nameLower.includes('football') || nameLower.includes('nfl') || nameLower.includes('gridiron')) {
+    return 'football';
+  }
+  
+  // Check for hockey keywords
+  if (nameLower.includes('hockey') || nameLower.includes('nhl') || nameLower.includes('ice')) {
+    return 'ice-hockey';
+  }
+  
+  // Check for soccer/football keywords
+  if (nameLower.includes('soccer') || nameLower.includes('mls')) {
+    return 'soccer';
+  }
+  
+  // Default to baseball
+  return 'baseball';
+};
+
 // Parse CSV data synchronously
 const results = Papa.parse(csvData, {
   header: false,
@@ -803,13 +831,16 @@ const cardsData = results.data.map((row) => {
   const [number, rawName, ownershipMarker] = row;
   const owned = !ownershipMarker || ownershipMarker.trim() === '';
   const name = rawName.trim();
+  const type = 'Baseball';
+  
   return {
     id: number,
     number: parseInt(number),
     name,
     team: '1987 Topps',
-    type: 'Baseball',
+    type,
     owned,
+    icon: getCardTypeIcon(name, type),
   };
 });
 

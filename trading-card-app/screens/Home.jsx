@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { View, Text, ScrollView, FlatList, TouchableOpacity, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import styles from '../styles';
 import TopBar from '../components/TopBar';
 import cardsData from '../data/cards';
@@ -7,12 +8,12 @@ import { AuthContext } from '../context/AuthContext';
 import { getTheme } from '../theme';
 
 export default function HomeScreen({ navigation }) {
-  const { favoriteCards, darkMode } = useContext(AuthContext);
-  const theme = getTheme(darkMode);
+  const { favoriteCards } = useContext(AuthContext);
+  const theme = getTheme(false); // Always use light theme
 
-  // Get owned cards (simulated based on card number being even)
-  const ownedCards = cardsData
-    .filter((card) => card.owned)
+  // Get all cards with complete data
+  const allCards = cardsData
+    .filter((card) => card.name !== "Unknown")
     .map((card, idx) => ({
       id: card.id,
       title: card.name,
@@ -23,23 +24,35 @@ export default function HomeScreen({ navigation }) {
       owned: card.owned,
       set: '1987 Topps',
       subset: 'Base',
+      icon: card.icon,
     }));
 
-  // Group owned cards by set to find most collected
-  const cardsBySet = {};
-  ownedCards.forEach((card) => {
-    if (!cardsBySet[card.set]) {
-      cardsBySet[card.set] = [];
+  // Get favorite cards by ID
+  const favoritedCards = allCards.filter((card) => favoriteCards && favoriteCards[card.id]);
+
+  // Group cards by set to show collection progress
+  const setProgress = {};
+  allCards.forEach((card) => {
+    const setName = card.set;
+    if (!setProgress[setName]) {
+      setProgress[setName] = { total: 0, owned: 0 };
     }
-    cardsBySet[card.set].push(card);
+    setProgress[setName].total += 1;
+    if (card.owned) {
+      setProgress[setName].owned += 1;
+    }
   });
 
-  // Get most collected set
-  const mostCollectedSet = Object.keys(cardsBySet).sort((a, b) => cardsBySet[b].length - cardsBySet[a].length)[0];
-  const mostCollectedCards = mostCollectedSet ? cardsBySet[mostCollectedSet] : [];
-
-  // Get favorite cards by ID
-  const favoritedCards = ownedCards.filter((card) => favoriteCards && favoriteCards[card.id]);
+  const getCardTypeIcon = (iconName) => {
+    const iconMap = {
+      'baseball': 'baseball',
+      'basketball': 'basketball',
+      'football': 'football',
+      'ice-hockey': 'ice-hockey',
+      'soccer': 'soccer',
+    };
+    return iconMap[iconName] || 'baseball';
+  };
 
   // Render card for horizontal scroll - larger and better display
   const renderHomeCard = ({ item }) => (
@@ -52,37 +65,38 @@ export default function HomeScreen({ navigation }) {
         overflow: 'hidden',
         elevation: 2,
       }}
-      onPress={() => alert(`${item.title}\nTeam: ${item.type}\n${item.rarity}`)}
+      onPress={() => alert(`${item.title}\nTeam: ${item.type}`)}
     >
       <Image
         source={{ uri: item.image }}
         style={{ width: '100%', height: 160, backgroundColor: '#eee' }}
       />
       <View style={{ padding: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+          <Ionicons name={getCardTypeIcon(item.icon)} size={12} color="#666" style={{ marginRight: 4 }} />
+          <Text
+            style={{
+              fontSize: 10,
+              fontWeight: '600',
+              color: '#666',
+              flex: 1,
+            }}
+            numberOfLines={1}
+          >
+            {item.type}
+          </Text>
+        </View>
         <Text
           style={{
             fontSize: 12,
             fontWeight: '700',
             color: '#333',
+            marginBottom: 4,
           }}
           numberOfLines={2}
         >
           {item.title}
         </Text>
-        <View
-          style={{
-            backgroundColor: '#f16513ff',
-            paddingHorizontal: 6,
-            paddingVertical: 2,
-            borderRadius: 4,
-            marginTop: 4,
-            alignSelf: 'flex-start',
-          }}
-        >
-          <Text style={{ fontSize: 10, color: '#fff', fontWeight: '600' }}>
-            {item.rarity}
-          </Text>
-        </View>
       </View>
     </TouchableOpacity>
   );
@@ -94,38 +108,58 @@ export default function HomeScreen({ navigation }) {
         onNotificationsPress={() => {}}
       />
 
-      <View style={{ marginTop: 14 }}>
-        <Text style={[styles.sectionTitle, { color: theme.text }]}>Cards You Own ({ownedCards.length})</Text>
-        <FlatList
-          data={ownedCards}
-          horizontal
-          keyExtractor={(i) => i.id}
-          renderItem={renderHomeCard}
-          showsHorizontalScrollIndicator={false}
-          style={{ paddingLeft: 6 }}
-        />
+      {/* Sets You Have Collected */}
+      <View style={{ marginTop: 20 }}>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Sets You've Collected 📦</Text>
+        <View style={{ paddingHorizontal: 6 }}>
+          {Object.entries(setProgress).map(([setName, progress]) => {
+            const percentage = Math.round((progress.owned / progress.total) * 100);
+            return (
+              <TouchableOpacity
+                key={setName}
+                onPress={() => navigation.navigate('Collection', { setName })}
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 8,
+                  padding: 12,
+                  marginBottom: 10,
+                  elevation: 2,
+                }}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#333' }}>{setName}</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: '#666' }}>
+                    {progress.owned}/{progress.total}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    height: 8,
+                    backgroundColor: '#e0e0e0',
+                    borderRadius: 4,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <View
+                    style={{
+                      height: '100%',
+                      width: `${percentage}%`,
+                      backgroundColor: '#f16513ff',
+                    }}
+                  />
+                </View>
+                <Text style={{ fontSize: 11, color: '#999', marginTop: 6 }}>
+                  {percentage}% complete
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
 
-      {mostCollectedCards.length > 0 && (
+      {favoritedCards.length > 0 ? (
         <View style={{ marginTop: 20 }}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>Your Most Collected Set</Text>
-          <Text style={{ fontSize: 12, color: theme.textSecondary, paddingHorizontal: 6, marginBottom: 8 }}>
-            {mostCollectedSet} ({mostCollectedCards.length} cards)
-          </Text>
-          <FlatList
-            data={mostCollectedCards}
-            horizontal
-            keyExtractor={(i) => i.id}
-            renderItem={renderHomeCard}
-            showsHorizontalScrollIndicator={false}
-            style={{ paddingLeft: 6 }}
-          />
-        </View>
-      )}
-
-      {favoritedCards.length > 0 && (
-        <View style={{ marginTop: 20 }}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>Your Favorites ⭐</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Your Favorites ⭐ ({favoritedCards.length})</Text>
           <FlatList
             data={favoritedCards}
             horizontal
@@ -134,6 +168,14 @@ export default function HomeScreen({ navigation }) {
             showsHorizontalScrollIndicator={false}
             style={{ paddingLeft: 6 }}
           />
+        </View>
+      ) : (
+        <View style={{ marginTop: 20, alignItems: 'center', paddingVertical: 40 }}>
+          <Ionicons name="star-outline" size={48} color={theme.textSecondary} style={{ marginBottom: 12 }} />
+          <Text style={{ color: theme.textSecondary, fontSize: 16, fontWeight: '600' }}>No favorite cards yet</Text>
+          <Text style={{ color: theme.textTertiary, fontSize: 12, marginTop: 8, textAlign: 'center', paddingHorizontal: 20 }}>
+            Visit your collection to mark cards as favorites
+          </Text>
         </View>
       )}
     </ScrollView>

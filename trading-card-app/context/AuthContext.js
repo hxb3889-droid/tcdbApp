@@ -5,7 +5,6 @@ export const AuthContext = createContext(null);
 export const AuthProvider = ({ children, authValue }) => {
   const [favoriteCards, setFavoriteCards] = useState({});
   const [favoriteSets, setFavoriteSets] = useState({});
-  const [darkMode, setDarkMode] = useState(false);
 
   const toggleFavorite = (cardId) => {
     setFavoriteCards((s) => ({ ...s, [cardId]: !s[cardId] }));
@@ -23,8 +22,6 @@ export const AuthProvider = ({ children, authValue }) => {
     favoriteSets,
     setFavoriteSets,
     toggleFavoriteSet,
-    darkMode,
-    setDarkMode,
   };
 
   return (

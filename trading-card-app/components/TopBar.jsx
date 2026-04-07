@@ -6,8 +6,8 @@ import { AuthContext } from '../context/AuthContext';
 import { getTheme } from '../theme';
 
 export default function TopBar({ onProfilePress, onNotificationsPress }) {
-  const { user, openLogin, darkMode } = useContext(AuthContext);
-  const theme = getTheme(darkMode);
+  const { user, openLogin } = useContext(AuthContext);
+  const theme = getTheme(false); // Always use light theme
 
   const handleProfilePress = () => {
     if (user) onProfilePress && onProfilePress();
