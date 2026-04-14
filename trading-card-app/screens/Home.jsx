@@ -67,31 +67,30 @@ export default function HomeScreen({ navigation }) {
       }}
       onPress={() => alert(`${item.title}\nTeam: ${item.type}`)}
     >
-      <Image
-        source={{ uri: item.image }}
-        style={{ width: '100%', height: 160, backgroundColor: '#eee' }}
-      />
+      <View
+        style={{ width: '100%', height: 160, backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }}
+      >
+        <Ionicons name={getCardTypeIcon(item.icon)} size={60} color="#f16513ff" />
+      </View>
       <View style={{ padding: 8 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-          <Ionicons name={getCardTypeIcon(item.icon)} size={12} color="#666" style={{ marginRight: 4 }} />
-          <Text
-            style={{
-              fontSize: 10,
-              fontWeight: '600',
-              color: '#666',
-              flex: 1,
-            }}
-            numberOfLines={1}
-          >
-            {item.type}
-          </Text>
-        </View>
+        <Text
+          style={{
+            fontSize: 10,
+            fontWeight: '600',
+            color: '#666',
+            marginBottom: 4,
+            textAlign: 'center',
+          }}
+          numberOfLines={1}
+        >
+          {item.type}
+        </Text>
         <Text
           style={{
             fontSize: 12,
             fontWeight: '700',
             color: '#333',
-            marginBottom: 4,
+            textAlign: 'center',
           }}
           numberOfLines={2}
         >

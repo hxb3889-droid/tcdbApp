@@ -108,7 +108,9 @@ export default function CollectionScreen({ route }) {
 
   const renderCard = ({ item }) => (
     <TouchableOpacity style={[styles.collectionCard, { backgroundColor: item.owned ? '#f0f9f6' : '#fff5f5', borderColor: item.owned ? '#4CAF50' : '#FF5252', borderWidth: 2 }]} onPress={() => alert(`${item.title}\nTeam: ${item.type}${item.owned ? '\nOwned' : '\nMissing'}`)}>
-      <Image source={{ uri: item.image }} style={styles.collectionImage} />
+      <View style={{ width: '100%', height: 160, backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }}>
+        <Ionicons name={getCardTypeIcon(item.icon)} size={80} color={item.owned ? '#4CAF50' : '#FF5252'} />
+      </View>
       <View style={styles.collectionInfo}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={[styles.collectionName, { fontStyle: item.owned ? 'normal' : 'italic' }]} numberOfLines={1}>{item.title}</Text>
@@ -117,10 +119,7 @@ export default function CollectionScreen({ route }) {
           </TouchableOpacity>
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-            <Ionicons name={getCardTypeIcon(item.icon)} size={14} color="#666" style={{ marginRight: 4 }} />
-            <Text style={{ color: '#666', fontSize: 12, flex: 1, fontStyle: item.owned ? 'normal' : 'italic' }} numberOfLines={1}>{item.subset || item.type}</Text>
-          </View>
+          <Text style={{ color: '#666', fontSize: 12, flex: 1, fontStyle: item.owned ? 'normal' : 'italic' }} numberOfLines={1}>{item.subset || item.type}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 4 }}>
             {!item.owned && (
               <View style={[styles.badge, { backgroundColor: '#FF5252' }]}>

@@ -11,6 +11,12 @@ export default function LoginScreen({ navigation }) {
   const tempPassword = 'bob';
   const passwordRef = useRef(null);
 
+  const skipLogin = () => {
+    setUser({ id: 'dev', name: 'Dev User', email: 'dev@localhost', avatar: 'https://asset-cdn.schoology.com/system/files/imagecache/profile_reg/pictures/picture-0df87436fe3b2eeed3a7f9c463821113_67867e4992ad5.jpg?1736867401' });
+    Alert.alert('Debug Login', 'Secret bypass active. Logged in as Dev User.');
+    navigation.replace('Main');
+  };
+
   const handleLogin = () => {
     if (id.toLowerCase() === tempId && password === tempPassword) {
       setUser({ id: tempId, name: 'Mr. Garner', email: tempId, avatar: 'https://asset-cdn.schoology.com/system/files/imagecache/profile_reg/pictures/picture-0df87436fe3b2eeed3a7f9c463821113_67867e4992ad5.jpg?1736867401' });
@@ -24,7 +30,7 @@ export default function LoginScreen({ navigation }) {
   return (
     <View style={[styles.container, { justifyContent: 'center' }] }>
       <View style={{ backgroundColor: '#fff', padding: 18, borderRadius: 8 }}>
-        <Text style={{ fontSize: 20, fontWeight: '700', marginBottom: 8 }}>Sign in</Text>
+        <Text style={{ fontSize: 20, fontWeight: '700', marginBottom: 8 }} onPress={skipLogin}>Sign in</Text>
         <TextInput 
           placeholder="id" 
           value={id} 
