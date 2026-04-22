@@ -8,6 +8,7 @@
     "@react-native-community/masked-view": "^0.1.11",
     "@react-navigation/bottom-tabs": "^7.4.7",
     "@react-navigation/native": "^7.1.17",
+    "@react-navigation/native-stack": "^7.14.11",
     "expo": "^54.0.12",
     "papaparse": "^5.5.3",
     "react": "^18.2.0",

@@ -15,7 +15,7 @@ export default function SettingsScreen() {
   // Calculate collection stats
   const cards = cardsData.filter(card => card.name !== "Unknown").map((card) => ({
     owned: card.owned,
-    set: '1987 Topps',
+    set: card.set,
   }));
   
   const totalCardsOwned = cards.filter(card => card.owned).length;

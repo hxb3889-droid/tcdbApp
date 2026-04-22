@@ -1,275 +1,140 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Image, ScrollView } from 'react-native';
-import styles from '../styles';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import styles from '../styles';
 import cardsData from '../data/cards';
+import setFamilies from '../data/setsFamilies';
 import { AuthContext } from '../context/AuthContext';
 import { getTheme } from '../theme';
 
-export default function CollectionScreen({ route }) {
-  const { favoriteCards, toggleFavorite } = useContext(AuthContext);
-  const theme = getTheme(false); // Always use light theme
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [sortBy, setSortBy] = useState('name');
-  const [showSortMenu, setShowSortMenu] = useState(false);
-  const [expandedTypes, setExpandedTypes] = useState({});
-  const [expandedSets, setExpandedSets] = useState({});
-  const [subsetSelection, setSubsetSelection] = useState({});
-  
-  const initialSetName = route?.params?.setName;
-  const [initialized, setInitialized] = React.useState(false);
+export default function CollectionScreen({ navigation }) {
+  const { ownedCards } = useContext(AuthContext);
+  const theme = getTheme(false);
+  const [expandedFamilies, setExpandedFamilies] = useState({});
 
-  const filters = ['All', 'Owned', 'Missing'];
-  const sortOptions = ['name', 'number', 'rarity'];
-
-  const getRarityColor = (rarity) => {
-    switch (rarity) {
-      case 'Legend': return '#FFD700'; // gold
-      case 'Epic': return '#9C27B0'; // purple
-      case 'Rare': return '#2196F3'; // blue
-      case 'Common': return '#4CAF50'; // green
-      default: return '#eee';
-    }
-  };
-
-  // Transform CSV card data into collection format
-  const cards = cardsData.filter(card => card.name !== "Unknown").map((card, idx) => ({
-    id: card.id,
-    title: card.name,
-    type: card.type,
-    number: card.number,
-    rarity: idx % 5 === 0 ? 'Legend' : idx % 4 === 0 ? 'Epic' : idx % 3 === 0 ? 'Rare' : 'Common',
-    image: `https://via.placeholder.com/240x320?text=%23${card.number}`,
-    owned: card.owned,
-    set: '1987 Topps',
-    subset: 'Base',
-    icon: card.icon,
-  }));
-
-  // Sort cards based on sortBy preference
-  const sortedCards = [...cards].sort((a, b) => {
-    if (sortBy === 'name') return a.title.localeCompare(b.title);
-    if (sortBy === 'number') return a.number - b.number;
-    if (sortBy === 'rarity') {
-      const rarityOrder = { 'Legend': 0, 'Epic': 1, 'Rare': 2, 'Common': 3 };
-      return rarityOrder[a.rarity] - rarityOrder[b.rarity];
-    }
-    return 0;
-  });
-
-  // Group by type -> set -> cards (skip category)
-  const typeData = {};
-  sortedCards.forEach((card) => {
-    const typ = card.type;
-    const st = card.set;
-
-    if (!typeData[typ]) typeData[typ] = {};
-    if (!typeData[typ][st]) typeData[typ][st] = [];
-    typeData[typ][st].push(card);
-  });
-
-  const typeNames = Object.keys(typeData).sort();
-
-  React.useEffect(() => {
-    if (initialSetName && !initialized && typeNames.length > 0) {
-      for (const type of typeNames) {
-        if (typeData[type] && typeData[type][initialSetName]) {
-          setExpandedTypes((prev) => ({ ...prev, [type]: true }));
-          setExpandedSets((prev) => ({
-            ...prev,
-            [`${type}||${initialSetName}`]: true,
-          }));
-          break;
-        }
+  // Calculate progress for each set
+  const setProgress = {};
+  cardsData.forEach((card) => {
+    if (card.name !== 'Unknown') {
+      const setName = card.set;
+      if (!setProgress[setName]) {
+        setProgress[setName] = { total: 0, owned: 0 };
       }
-      setInitialized(true);
+      setProgress[setName].total += 1;
+      if (ownedCards[card.id]) {
+        setProgress[setName].owned += 1;
+      }
     }
-  }, [initialSetName, initialized, typeNames, typeData]);
+  });
 
-  const toggleType = (type) => {
-    setExpandedTypes((s) => ({ ...s, [type]: !s[type] }));
-  };
+  // Group progress by family
+  const familyProgress = {};
+  setFamilies.forEach((family) => {
+    const familyTotal = family.subsets.reduce((sum, subset) => sum + (setProgress[subset.fullName]?.total || 0), 0);
+    const familyOwned = family.subsets.reduce((sum, subset) => sum + (setProgress[subset.fullName]?.owned || 0), 0);
+    familyProgress[family.baseSetName] = { total: familyTotal, owned: familyOwned, subsets: family.subsets };
+  });
 
-  const toggleSet = (type, setName) => {
-    const key = `${type}||${setName}`;
-    setExpandedSets((s) => ({ ...s, [key]: !s[key] }));
-  };
-
-  const getCardTypeIcon = (iconName) => {
-    const iconMap = {
-      'baseball': 'baseball',
-      'basketball': 'basketball',
-      'football': 'football',
-      'ice-hockey': 'ice-hockey',
-      'soccer': 'soccer',
-    };
-    return iconMap[iconName] || 'baseball';
-  };
-
-  const renderCard = ({ item }) => (
-    <TouchableOpacity style={[styles.collectionCard, { backgroundColor: item.owned ? '#f0f9f6' : '#fff5f5', borderColor: item.owned ? '#4CAF50' : '#FF5252', borderWidth: 2 }]} onPress={() => alert(`${item.title}\nTeam: ${item.type}${item.owned ? '\nOwned' : '\nMissing'}`)}>
-      <View style={{ width: '100%', height: 160, backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }}>
-        <Ionicons name={getCardTypeIcon(item.icon)} size={80} color={item.owned ? '#4CAF50' : '#FF5252'} />
-      </View>
-      <View style={styles.collectionInfo}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={[styles.collectionName, { fontStyle: item.owned ? 'normal' : 'italic' }]} numberOfLines={1}>{item.title}</Text>
-          <TouchableOpacity onPress={() => toggleFavorite(item.id)} style={{ marginLeft: 4 }}>
-            <Ionicons name={favoriteCards[item.id] ? 'star' : 'star-outline'} size={16} color={favoriteCards[item.id] ? '#f16513ff' : '#999'} />
-          </TouchableOpacity>
-        </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={{ color: '#666', fontSize: 12, flex: 1, fontStyle: item.owned ? 'normal' : 'italic' }} numberOfLines={1}>{item.subset || item.type}</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 4 }}>
-            {!item.owned && (
-              <View style={[styles.badge, { backgroundColor: '#FF5252' }]}>
-                <Text style={styles.badgeText}>Missing</Text>
-              </View>
-            )}
-          </View>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderSet = (type, setName) => {
-    const setCards = typeData[type][setName];
-    const key = `${type}||${setName}`;
-    const expanded = !!expandedSets[key];
-
-    const subsets = Array.from(new Set(setCards.map((c) => c.subset || 'Base')));
-    const subsetOptions = ['All', ...subsets];
-    const selectedSubset = subsetSelection[key] || 'All';
-
-    const cardsForSubset = setCards.filter((c) => selectedSubset === 'All' ? true : (c.subset || 'Base') === selectedSubset);
-    const owned = cardsForSubset.filter((c) => c.owned);
-    const missing = cardsForSubset.filter((c) => !c.owned);
-    const allCards = cardsForSubset;
-
-    const showCards = activeFilter === 'Owned' ? owned : activeFilter === 'Missing' ? missing : allCards;
-
-    if (showCards.length === 0) {
-      return (
-        <View key={key} style={{ marginTop: 10, marginLeft: 12 }}>
-          <Text style={{ paddingLeft: 8, color: '#999', fontSize: 12 }}>No cards in this filter.</Text>
-        </View>
-      );
-    }
-
-    return (
-      <View key={key} style={{ marginTop: 10, marginLeft: 12 }}>
-        <TouchableOpacity onPress={() => toggleSet(type, setName)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-            <Text style={{ fontSize: 14, fontWeight: '700' }}>{setName}</Text>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <View style={{ backgroundColor: '#f16513ff', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, marginRight: 8 }}>
-              <Text style={{ color: '#fff', fontSize: 10, fontWeight: '600' }}>{owned.length}/{cardsForSubset.length}</Text>
-            </View>
-            <Text style={{ color: '#666', fontSize: 12 }}>{expanded ? '▾' : '▸'}</Text>
-          </View>
-        </TouchableOpacity>
-
-        {expanded && (
-          <View>
-            {subsetOptions.length > 1 && (
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingVertical: 6, marginLeft: 8 }}>
-                {subsetOptions.map((s) => (
-                  <TouchableOpacity key={s} onPress={() => setSubsetSelection((st) => ({ ...st, [key]: s }))} style={{ marginRight: 6, marginBottom: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, backgroundColor: selectedSubset === s ? '#f16513ff' : '#e8e8e8' }}>
-                    <Text style={{ color: selectedSubset === s ? '#fff' : '#333', fontSize: 11, fontWeight: '600' }}>{s}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-
-            <View>
-              <Text style={{ fontSize: 12, fontWeight: '600', color: '#666', marginBottom: 6, marginLeft: 8 }}>{activeFilter} ({showCards.length})</Text>
-              <FlatList data={showCards} keyExtractor={(i) => i.id} renderItem={renderCard} numColumns={2} columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 8 }} scrollEnabled={false} />
-            </View>
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  const renderType = (type) => {
-    const expanded = !!expandedTypes[type];
-    const typeSets = typeData[type];
-    const setNames = Object.keys(typeSets).sort();
-
-    return (
-      <View key={type} style={{ marginTop: 8, marginLeft: 8 }}>
-        <TouchableOpacity onPress={() => toggleType(type)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, paddingHorizontal: 6 }}>
-          <Text style={{ fontSize: 15, fontWeight: '700', color: '#333' }}>{type}</Text>
-          <Text style={{ color: '#666', fontSize: 12 }}>{expanded ? '▾' : '▸'}</Text>
-        </TouchableOpacity>
-
-        {expanded && (
-          <View>
-            {setNames.map((setName) => renderSet(type, setName))}
-          </View>
-        )}
-      </View>
-    );
+  const toggleFamilyExpand = (familyName) => {
+    setExpandedFamilies((prev) => ({ ...prev, [familyName]: !prev[familyName] }));
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <Text style={{ fontSize: 18, fontWeight: '700' }}>My Collection</Text>
-        <TouchableOpacity onPress={() => setShowSortMenu(!showSortMenu)}>
-          <Ionicons name="swap-vertical-outline" size={22} color="#333" />
-        </TouchableOpacity>
+        <Text style={{ fontSize: 18, fontWeight: '700', color: '#333' }}>My Collection</Text>
       </View>
 
-      {showSortMenu && (
-        <View style={{ backgroundColor: '#fff', borderRadius: 8, padding: 10, marginBottom: 12, elevation: 2 }}>
-          <Text style={{ fontSize: 12, fontWeight: '700', marginBottom: 8, color: '#666' }}>Sort By:</Text>
-          {sortOptions.map((option) => (
-            <TouchableOpacity
-              key={option}
-              onPress={() => {
-                setSortBy(option);
-                setShowSortMenu(false);
-              }}
-              style={{ paddingVertical: 8, paddingHorizontal: 12, backgroundColor: sortBy === option ? '#f16513ff' : 'transparent', borderRadius: 6, marginBottom: 4 }}
-            >
-              <Text style={{ color: sortBy === option ? '#fff' : '#333', fontWeight: sortBy === option ? '700' : '600' }}>
-                {option === 'name' ? 'Name (A-Z)' : option === 'number' ? 'Card Number' : 'Rarity'}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+      <View style={{ marginTop: 12 }}>
+        <Text style={{ fontSize: 14, fontWeight: '700', color: '#666', marginBottom: 12 }}>Card Sets</Text>
+        {Object.entries(familyProgress).map(([familyName, progress]) => {
+          const isExpanded = expandedFamilies[familyName];
+          const hasMultipleSubsets = progress.subsets.length > 1;
+          const percentage = Math.round((progress.total > 0 ? (progress.owned / progress.total) * 100 : 0));
 
-      <View style={styles.collectionFilters}>
-        {filters.map((f) => (
-          <TouchableOpacity key={f} style={[styles.filterButton, activeFilter === f && styles.filterButtonActive]} onPress={() => setActiveFilter(f)}>
-            <Text style={[styles.filterText, activeFilter === f && styles.filterTextActive]}>{f}</Text>
-          </TouchableOpacity>
-        ))}
+          return (
+            <View key={familyName} style={{ marginBottom: 12 }}>
+              <TouchableOpacity
+                onPress={() => hasMultipleSubsets && toggleFamilyExpand(familyName)}
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 10,
+                  padding: 14,
+                  elevation: 2,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 2,
+                }}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#333', flex: 1 }}>{familyName}</Text>
+                    {hasMultipleSubsets && (
+                      <Text style={{ color: '#f16513ff', fontSize: 14, marginLeft: 8 }}>{isExpanded ? '▾' : '▸'}</Text>
+                    )}
+                  </View>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: '#999' }}>
+                    {progress.owned}/{progress.total}
+                  </Text>
+                </View>
+                <View style={{ height: 10, backgroundColor: '#e8e8e8', borderRadius: 5, overflow: 'hidden', marginBottom: 8, elevation: 1 }}>
+                  <View
+                    style={{
+                      height: '100%',
+                      width: `${percentage}%`,
+                      backgroundColor: `${percentage < 50 ? '#FF9800' : percentage < 100 ? '#4CAF50' : '#4CAF50'}`,
+                      borderRadius: 5,
+                    }}
+                  />
+                </View>
+                <Text style={{ fontSize: 11, color: '#999' }}>{percentage}% complete</Text>
+              </TouchableOpacity>
+
+              {isExpanded && hasMultipleSubsets && (
+                <View style={{ marginTop: 10, paddingLeft: 8 }}>
+                  {progress.subsets.map((subset) => {
+                    const subsetProgress = setProgress[subset.fullName] || { total: 0, owned: 0 };
+                    const subsetPct = Math.round((subsetProgress.total > 0 ? (subsetProgress.owned / subsetProgress.total) * 100 : 0));
+                    return (
+                      <TouchableOpacity
+                        key={subset.fullName}
+                        onPress={() => navigation.navigate('SetDetails', { setName: subset.fullName })}
+                        style={{
+                          backgroundColor: '#f8f8f8',
+                          borderRadius: 8,
+                          padding: 12,
+                          marginBottom: 8,
+                          borderLeftWidth: 4,
+                          borderLeftColor: '#f16513ff',
+                          elevation: 1,
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                          <Text style={{ fontSize: 13, fontWeight: '600', color: '#333', flex: 1 }}>{subset.name}</Text>
+                          <Text style={{ fontSize: 11, fontWeight: '600', color: '#999' }}>
+                            {subsetProgress.owned}/{subsetProgress.total}
+                          </Text>
+                        </View>
+                        <View style={{ height: 6, backgroundColor: '#e0e0e0', borderRadius: 3, overflow: 'hidden' }}>
+                          <View style={{ height: '100%', width: `${subsetPct}%`, backgroundColor: '#f16513ff', borderRadius: 3 }} />
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+
+              {!hasMultipleSubsets && (
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('SetDetails', { setName: progress.subsets[0].fullName })}
+                  style={{ marginTop: 0 }}
+                />
+              )}
+            </View>
+          );
+        })}
       </View>
-
-      {typeNames.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text style={{ color: '#777' }}>No cards found.</Text>
-        </View>
-      ) : (
-        typeNames.map((type) => (
-          <View key={type} style={{ marginTop: 12 }}>
-            <TouchableOpacity onPress={() => toggleType(type)} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 6, paddingVertical: 10, backgroundColor: '#f0f0f0', borderRadius: 8 }}>
-              <Text style={{ fontSize: 16, fontWeight: '800', color: '#000' }}>{type}</Text>
-              <Text style={{ color: '#666', fontSize: 14 }}>{expandedTypes[type] ? '▾' : '▸'}</Text>
-            </TouchableOpacity>
-
-            {expandedTypes[type] && (
-              <View>
-                {Object.keys(typeData[type]).sort().map((setName) => renderSet(type, setName))}
-              </View>
-            )}
-          </View>
-        ))
-      )}
     </ScrollView>
   );
 }

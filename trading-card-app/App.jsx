@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
 import { AuthContext, AuthProvider } from './context/AuthContext';
@@ -9,10 +10,26 @@ import styles from './styles';
 import HomeScreen from './screens/Home';
 import SearchScreen from './screens/Search';
 import CollectionScreen from './screens/Collection';
+import SetDetailsScreen from './screens/SetDetails';
 import SettingsScreen from './screens/Settings';
 import LoginScreen from './screens/Login';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+const HomeStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="HomeMain" component={HomeScreen} />
+    <Stack.Screen name="SetDetails" component={SetDetailsScreen} />
+  </Stack.Navigator>
+);
+
+const CollectionStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="CollectionMain" component={CollectionScreen} />
+    <Stack.Screen name="SetDetails" component={SetDetailsScreen} />
+  </Stack.Navigator>
+);
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -57,9 +74,9 @@ export default function App() {
             headerShown: false,
           })}
         >
-          <Tab.Screen name="Home" component={HomeScreen} />
+          <Tab.Screen name="Home" component={HomeStack} />
           <Tab.Screen name="Search" component={SearchScreen} />
-          <Tab.Screen name="Collection" component={CollectionScreen} />
+          <Tab.Screen name="Collection" component={CollectionStack} />
           <Tab.Screen name="Settings" component={SettingsScreen} />
         </Tab.Navigator>
       </NavigationContainer>

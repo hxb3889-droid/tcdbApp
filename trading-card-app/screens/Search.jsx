@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getTheme } from '../theme';
 
 export default function SearchScreen() {
-  const { favoriteCards, toggleFavorite } = React.useContext(AuthContext);
+  const { favoriteCards, toggleFavorite, ownedCards, toggleOwned } = React.useContext(AuthContext);
   const theme = getTheme(false); // Always use light theme
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("All");
@@ -16,7 +16,7 @@ export default function SearchScreen() {
   const uniqueTypes = ['All', ...new Set(cardsData.map((c) => c.type))];
   const tabs = uniqueTypes;
 
-  const filtered = cardsData.filter(card => card.name !== "Unknown").map(card => ({ ...card, owned: card.owned })).filter((c) => {
+  const filtered = cardsData.filter(card => card.name !== "Unknown").map(card => ({ ...card, owned: ownedCards[card.id] || false })).filter((c) => {
     const matchesTab = activeTab === "All" || c.type === activeTab;
     const trimmedQuery = query.trim().toLowerCase();
     // If query is empty, show all cards; otherwise filter by name or team
@@ -25,16 +25,24 @@ export default function SearchScreen() {
   });
 
   const renderCard = ({ item }) => (
-    <TouchableOpacity style={[styles.cardItem, { backgroundColor: theme.card }]} onPress={() => alert(`Selected: ${item.name}\nTeam: ${item.team}\nCard #${item.number}`)}>
+    <TouchableOpacity style={[styles.cardItem, { backgroundColor: item.owned ? '#f0f9f6' : '#fff5f5', borderLeftWidth: 4, borderLeftColor: item.owned ? '#4CAF50' : '#FF5252' }]} onPress={() => alert(`Selected: ${item.name}\nTeam: ${item.team}\nCard #${item.number}${item.owned ? '\nOwned' : '\nMissing'}`)}>
       <Image source={{ uri: 'https://via.placeholder.com/72x108?text=%23' + item.number }} style={styles.cardThumb} />
       <View style={{ marginLeft: 12, flex: 1, justifyContent: "center" }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={[styles.cardTitle, { color: item.owned ? '#4CAF50' : '#F44336' }]}>{item.name}</Text>
-          <TouchableOpacity onPress={() => toggleFavorite(item.id)} style={{ marginLeft: 4 }}>
-            <Ionicons name={favoriteCards[item.id] ? 'star' : 'star-outline'} size={16} color={favoriteCards[item.id] ? theme.primary : theme.textTertiary} />
-          </TouchableOpacity>
+          <Text style={[styles.cardTitle, { color: item.owned ? '#4CAF50' : '#F44336', fontStyle: item.owned ? 'normal' : 'italic' }]}>{item.name}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => toggleOwned(item.id)} style={{ marginRight: 4 }}>
+              <Ionicons name={item.owned ? 'checkmark-circle' : 'close-circle'} size={16} color={item.owned ? '#4CAF50' : '#FF5252'} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => toggleFavorite(item.id)} style={{ marginLeft: 4 }}>
+              <Ionicons name={favoriteCards[item.id] ? 'star' : 'star-outline'} size={16} color={favoriteCards[item.id] ? theme.primary : theme.textTertiary} />
+            </TouchableOpacity>
+          </View>
         </View>
-        <Text style={{ color: theme.textSecondary, marginTop: 4 }}>{item.team}</Text>
+        <Text style={{ color: theme.textSecondary, marginTop: 4 }}>{item.team || item.set}</Text>
+        {item.team ? (
+          <Text style={{ color: theme.textTertiary, marginTop: 2, fontSize: 12 }}>{item.set}</Text>
+        ) : null}
         <Text style={{ color: theme.textTertiary, marginTop: 2, fontSize: 12 }}>Card #{item.number}</Text>
       </View>
     </TouchableOpacity>
