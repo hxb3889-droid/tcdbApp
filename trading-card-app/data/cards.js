@@ -4,7 +4,7 @@ const sets = [
     cards: [
       {
         id: "sports-card-sets-1987-topps-1-1",
-        number: "1",
+        number: "2",
         name: "Roger Clemens RB",
         team: "",
         type: "Baseball",

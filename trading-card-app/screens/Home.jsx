@@ -152,7 +152,13 @@ export default function HomeScreen({ navigation }) {
             return (
               <View key={familyName} style={{ marginBottom: 10 }}>
                 <TouchableOpacity
-                  onPress={() => hasMultipleSubsets && toggleFamilyExpand(familyName)}
+                  onPress={() => {
+                    if (hasMultipleSubsets) {
+                      toggleFamilyExpand(familyName);
+                    } else if (progress.total > 0) {
+                      navigation.navigate('SetDetails', { setName: progress.subsets[0].fullName });
+                    }
+                  }}
                   style={{
                     backgroundColor: '#fff',
                     borderRadius: 8,
@@ -233,18 +239,6 @@ export default function HomeScreen({ navigation }) {
                         </TouchableOpacity>
                       );
                     })}
-                  </View>
-                )}
-
-                {!hasMultipleSubsets && (
-                  <View style={{ marginTop: 0 }}>
-                    {progress.subsets.map((subset) => (
-                      <TouchableOpacity
-                        key={subset.fullName}
-                        onPress={() => navigation.navigate('Collection', { setName: subset.fullName })}
-                        style={{ marginTop: 0 }}
-                      />
-                    ))}
                   </View>
                 )}
               </View>

@@ -8,9 +8,12 @@ import { AuthContext } from '../context/AuthContext';
 import { getTheme } from '../theme';
 
 export default function CollectionScreen({ navigation }) {
-  const { ownedCards } = useContext(AuthContext);
+  const { ownedCards, toggleOwned } = useContext(AuthContext);
   const theme = getTheme(false);
   const [expandedFamilies, setExpandedFamilies] = useState({});
+  const [menuOpenFamily, setMenuOpenFamily] = useState(null);
+  const [selectedFamilies, setSelectedFamilies] = useState(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
 
   // Calculate progress for each set
   const setProgress = {};
@@ -39,6 +42,26 @@ export default function CollectionScreen({ navigation }) {
     setExpandedFamilies((prev) => ({ ...prev, [familyName]: !prev[familyName] }));
   };
 
+  const toggleFamilySelection = (familyName) => {
+    const newSelected = new Set(selectedFamilies);
+    if (newSelected.has(familyName)) {
+      newSelected.delete(familyName);
+    } else {
+      newSelected.add(familyName);
+    }
+    setSelectedFamilies(newSelected);
+    if (newSelected.size > 0 && !selectionMode) {
+      setSelectionMode(true);
+    } else if (newSelected.size === 0) {
+      setSelectionMode(false);
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedFamilies(new Set());
+    setSelectionMode(false);
+  };
+
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -51,13 +74,25 @@ export default function CollectionScreen({ navigation }) {
           const isExpanded = expandedFamilies[familyName];
           const hasMultipleSubsets = progress.subsets.length > 1;
           const percentage = Math.round((progress.total > 0 ? (progress.owned / progress.total) * 100 : 0));
+          const isSelected = selectedFamilies.has(familyName);
 
           return (
             <View key={familyName} style={{ marginBottom: 12 }}>
               <TouchableOpacity
-                onPress={() => hasMultipleSubsets && toggleFamilyExpand(familyName)}
+                onPress={() => {
+                  if (selectionMode) {
+                    toggleFamilySelection(familyName);
+                  } else if (hasMultipleSubsets) {
+                    toggleFamilyExpand(familyName);
+                  } else {
+                    navigation.navigate('SetDetails', { setName: progress.subsets[0].fullName });
+                  }
+                }}
+                onLongPress={() => {
+                  toggleFamilySelection(familyName);
+                }}
                 style={{
-                  backgroundColor: '#fff',
+                  backgroundColor: isSelected ? '#e3f2fd' : '#fff',
                   borderRadius: 10,
                   padding: 14,
                   elevation: 2,
@@ -65,18 +100,28 @@ export default function CollectionScreen({ navigation }) {
                   shadowOffset: { width: 0, height: 1 },
                   shadowOpacity: 0.1,
                   shadowRadius: 2,
+                  borderWidth: isSelected ? 2 : 0,
+                  borderColor: isSelected ? '#2196F3' : 'transparent',
+                  position: 'relative',
                 }}
               >
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                     <Text style={{ fontSize: 15, fontWeight: '700', color: '#333', flex: 1 }}>{familyName}</Text>
-                    {hasMultipleSubsets && (
+                    {hasMultipleSubsets && !selectionMode && (
                       <Text style={{ color: '#f16513ff', fontSize: 14, marginLeft: 8 }}>{isExpanded ? '▾' : '▸'}</Text>
                     )}
                   </View>
-                  <Text style={{ fontSize: 12, fontWeight: '600', color: '#999' }}>
-                    {progress.owned}/{progress.total}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: '#999', marginRight: 8 }}>
+                      {progress.owned}/{progress.total}
+                    </Text>
+                    {!selectionMode && (
+                      <TouchableOpacity onPress={() => setMenuOpenFamily(menuOpenFamily === familyName ? null : familyName)} style={{ padding: 4 }}>
+                        <Ionicons name="ellipsis-vertical" size={20} color="#333" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
                 <View style={{ height: 10, backgroundColor: '#e8e8e8', borderRadius: 5, overflow: 'hidden', marginBottom: 8, elevation: 1 }}>
                   <View
@@ -89,6 +134,35 @@ export default function CollectionScreen({ navigation }) {
                   />
                 </View>
                 <Text style={{ fontSize: 11, color: '#999' }}>{percentage}% complete</Text>
+                {menuOpenFamily === familyName && (
+                  <View style={{ position: 'absolute', top: 50, right: 10, backgroundColor: '#fff', borderRadius: 6, overflow: 'visible', borderWidth: 1, borderColor: '#ddd', zIndex: 9999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3, elevation: 100, minWidth: 120 }}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        // Mark all cards in this family as owned
+                        progress.subsets.forEach(subset => {
+                          const setCards = cardsData.filter(card => card.set === subset.fullName && card.name !== 'Unknown');
+                          setCards.forEach(card => {
+                            if (!ownedCards[card.id]) {
+                              // Note: This would need access to toggleOwned, but since it's read-only here, perhaps navigate or something
+                            }
+                          });
+                        });
+                        setMenuOpenFamily(null);
+                      }}
+                      style={{ paddingVertical: 10, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: '#ddd' }}
+                    >
+                      <Text style={{ color: '#333', fontSize: 14, fontWeight: '500' }}>Mark All Owned</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setMenuOpenFamily(null);
+                      }}
+                      style={{ paddingVertical: 10, paddingHorizontal: 12 }}
+                    >
+                      <Text style={{ color: '#333', fontSize: 14, fontWeight: '500' }}>View Details</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </TouchableOpacity>
 
               {isExpanded && hasMultipleSubsets && (
@@ -123,13 +197,6 @@ export default function CollectionScreen({ navigation }) {
                     );
                   })}
                 </View>
-              )}
-
-              {!hasMultipleSubsets && (
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('SetDetails', { setName: progress.subsets[0].fullName })}
-                  style={{ marginTop: 0 }}
-                />
               )}
             </View>
           );

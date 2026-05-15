@@ -115,6 +115,7 @@ export default StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     elevation: 1,
+    overflow: 'visible',
   },
   cardThumb: {
     width: 72,
